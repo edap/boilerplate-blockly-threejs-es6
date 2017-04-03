@@ -1,51 +1,34 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-"use strict";
+'use strict';
 
-var _person = require("./person");
+// import Person from "./person";
 
-var _person2 = _interopRequireDefault(_person);
+// let person = new Person("Dave", "Prati");
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var person = new _person2.default("Dave", "Prati");
-
-document.getElementById("nameSpan").innerHTML = person.getFirstName() + " " + person.getLastName();
-
-},{"./person":2}],2:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Person = function () {
-    function Person(firstName, lastName) {
-        _classCallCheck(this, Person);
-
-        this.firstName = firstName;
-        this.lastName = lastName;
-    }
-
-    _createClass(Person, [{
-        key: "getFirstName",
-        value: function getFirstName() {
-            return this.firstName;
-        }
-    }, {
-        key: "getLastName",
-        value: function getLastName() {
-            return this.lastName;
-        }
-    }]);
-
-    return Person;
-}();
-
-exports.default = Person;
+// document.getElementById("nameSpan").innerHTML = person.getFirstName() + " " + person.getLastName();
+var blocklyArea = document.getElementById('blocklyArea');
+var blocklyDiv = document.getElementById('blocklyDiv');
+var workspace = Blockly.inject(blocklyDiv, { media: '../../media/',
+  toolbox: document.getElementById('toolbox') });
+var onresize = function onresize(e) {
+  // Compute the absolute coordinates and dimensions of blocklyArea.
+  var element = blocklyArea;
+  var x = 0;
+  var y = 0;
+  do {
+    x += element.offsetLeft;
+    y += element.offsetTop;
+    element = element.offsetParent;
+  } while (element);
+  // Position blocklyDiv over blocklyArea.
+  blocklyDiv.style.left = x + 'px';
+  blocklyDiv.style.top = y + 'px';
+  blocklyDiv.style.width = blocklyArea.offsetWidth + 'px';
+  blocklyDiv.style.height = blocklyArea.offsetHeight + 'px';
+};
+window.addEventListener('resize', onresize, false);
+onresize();
+Blockly.svgResize(workspace);
 
 },{}]},{},[1])
 
