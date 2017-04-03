@@ -5,11 +5,9 @@ var _person = require("./person");
 
 var _person2 = _interopRequireDefault(_person);
 
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : { default: obj };
-}
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var person = new _person2.default("Davide", "Kulkarni");
+var person = new _person2.default("Dave", "Prati");
 
 document.getElementById("nameSpan").innerHTML = person.getFirstName() + " " + person.getLastName();
 

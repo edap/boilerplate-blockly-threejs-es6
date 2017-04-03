@@ -17,25 +17,31 @@ var config = {
 };
 
 
-var bundler;
-function getBundler() {
-  if (!bundler) {
-    bundler = watchify(browserify(config.entryFile, _.extend({ debug: true }, watchify.args)));
-  }
-  return bundler;
-};
+var bundler = watchify(browserify(config.entryFile, _.extend({ debug: true }, watchify.args)));
+bundler.transform(babel,{ presets: ["es2015"]});
+// On updates recompile
+bundler.on('update', bundle);
 
-gulp.task('build', function(){
-  getBundler()
-  .transform(babel,{ presets: ["es2015"]})
-  .bundle()
-  .on('error', function(err) { console.error(err); this.emit('end'); })
-  .pipe(source(config.outputFile))
-  .pipe(buffer())
-  .pipe(sourcemaps.init({ loadMaps: true }))
-  .pipe(sourcemaps.write('./'))
-  .pipe(gulp.dest(config.outputDir))
-  .pipe(reload({ stream: true }));
+function bundle() {
+
+    gutil.log('Compiling JS...');
+
+    return bundler.bundle()
+      .on('error', function (err) {
+        gutil.log(err.message);
+        browserSync.notify("Browserify Error!");
+        this.emit("end");
+      })
+      .pipe(source(config.outputFile))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({ loadMaps: true }))
+      .pipe(sourcemaps.write('./'))
+      .pipe(gulp.dest(config.outputDir))
+      .pipe(reload({ stream: true }));
+}
+
+gulp.task('build', function () {
+    return bundle();
 });
 
 gulp.task('watch', ['build'], function() {
@@ -44,21 +50,8 @@ gulp.task('watch', ['build'], function() {
       baseDir: './build'
     }
   });
-
-  getBundler().on('update', function() {
-    gulp.start('build')
-  });
 });
 
-
-// WEB SERVER
-gulp.task('serve', function () {
-  browserSync({
-    server: {
-      baseDir: './build'
-    }
-  });
-});
 
 gulp.task("copyStaticFiles", function(){
     return gulp.src("./src/html/*.*")
