@@ -10,10 +10,12 @@
   "license": "ISC",
   "dependencies": {
     "babelify": "^7.3.0",
+    "browser-sync": "^2.18.8",
     "browserify": "^14.1.0",
     "gulp": "^3.9.1",
-    "gulp-connect": "^5.0.0",
     "gulp-sourcemaps": "^2.5.0",
+    "gulp-util": "^3.0.8",
+    "lodash": "^4.17.4",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.9.0"

@@ -2,10 +2,13 @@ var gulp = require('gulp');
 var sourcemaps = require('gulp-sourcemaps');
 var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
+var gutil       = require('gulp-util');
 var browserify = require('browserify');
 var watchify = require('watchify');
 var babel = require('babelify');
-var connect = require('gulp-connect');
+var _ = require('lodash');
+var browserSync = require('browser-sync');
+var reload = browserSync.reload;
 
 var config = {
   entryFile: './src/js/index.js',
@@ -14,32 +17,47 @@ var config = {
 };
 
 
+var bundler;
+function getBundler() {
+  if (!bundler) {
+    bundler = watchify(browserify(config.entryFile, _.extend({ debug: true }, watchify.args)));
+  }
+  return bundler;
+};
+
 gulp.task('build', function(){
-  var bundler = browserify({entries: [config.entryFile], debug: true }).transform(babel,{
-    // Use all of the ES2015 spec
-    presets: ["es2015"]
+  getBundler()
+  .transform(babel,{ presets: ["es2015"]})
+  .bundle()
+  .on('error', function(err) { console.error(err); this.emit('end'); })
+  .pipe(source(config.outputFile))
+  .pipe(buffer())
+  .pipe(sourcemaps.init({ loadMaps: true }))
+  .pipe(sourcemaps.write('./'))
+  .pipe(gulp.dest(config.outputDir))
+  .pipe(reload({ stream: true }));
+});
+
+gulp.task('watch', ['build'], function() {
+  browserSync({
+    server: {
+      baseDir: './build'
+    }
   });
 
-  bundler.bundle()
-      .on('error', function(err) { console.error(err); this.emit('end'); })
-      .pipe(source(config.outputFile))
-      .pipe(buffer())
-      .pipe(sourcemaps.init({ loadMaps: true }))
-      .pipe(sourcemaps.write('./'))
-      .pipe(gulp.dest(config.outputDir));
-});
-
-gulp.task('watch', function () {
-  gulp.watch('./src/js/**/*.js', ['build']);
+  getBundler().on('update', function() {
+    gulp.start('build')
+  });
 });
 
 
-gulp.task('startServer', function(){
-        connect.server({
-                    root : "./build",
-                    livereload : true,
-                    port : 9001
-                });
+// WEB SERVER
+gulp.task('serve', function () {
+  browserSync({
+    server: {
+      baseDir: './build'
+    }
+  });
 });
 
 gulp.task("copyStaticFiles", function(){
@@ -47,4 +65,4 @@ gulp.task("copyStaticFiles", function(){
     .pipe(gulp.dest("./build"));
 });
 
-gulp.task('default', ['copyStaticFiles','watch', 'startServer']);
+gulp.task('default', ['copyStaticFiles','watch']);
