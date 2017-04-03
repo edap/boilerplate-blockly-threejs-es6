@@ -3,3 +3,5 @@
 ## Installation
 Clone the repository and run `npm install`.
 Clone the Blockly repository https://github.com/google/blockly inside the build folder. The blockly npm package is not included in the package.json file because I did not find a way to get it working with `require` or `import`.
+
+Once the installation is done, run `gulp`. You should see a page with some blocks to drag and drop
