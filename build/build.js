@@ -7,7 +7,7 @@ var _person2 = _interopRequireDefault(_person);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var person = new _person2.default("Ram", "Kulkarni");
+var person = new _person2.default("David", "Kulkarni");
 
 document.getElementById("nameSpan").innerHTML = person.getFirstName() + " " + person.getLastName();
 
