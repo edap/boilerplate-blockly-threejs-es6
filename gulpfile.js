@@ -8,7 +8,7 @@ var babel = require('babelify');
 var connect = require('gulp-connect');
 
 function compile(watch) {
-  var bundler = watchify(browserify('./src/index.js', { debug: true }).transform(babel,{
+  var bundler = watchify(browserify('./src/js/index.js', { debug: true }).transform(babel,{
     // Use all of the ES2015 spec
     presets: ["es2015"]
   }));
@@ -47,4 +47,9 @@ gulp.task('startServer', function(){
                 });
 });
 
-gulp.task('default', ['watch', 'startServer']);
+gulp.task("copyStaticFiles", function(){
+    return gulp.src("./src/html/*.*")
+    .pipe(gulp.dest("./build"));
+});
+
+gulp.task('default', ['copyStaticFiles','watch', 'startServer']);
