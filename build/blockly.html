@@ -1,0 +1,38 @@
+<html>
+    <head>
+        <title>Babel Test</title>
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+        <script src="blockly/blockly_compressed.js"></script>
+        <script src="blockly/blocks_compressed.js"></script>
+        <script src="blockly/msg/js/en.js"></script>
+    </head>
+      <script>
+      function blocklyInit(){
+        //Blockly.inject(document.body, {toolbox: document.getElementById('toolbox')});
+        var rootBlock = Blockly.inject('blocklyDiv',
+          {media: 'blockly/media/',
+          toolbox: document.getElementById('toolbox')}
+        );
+        // Let the top-level application know that Blockly is ready.
+        window.parent.blockly_loaded(Blockly);
+      };
+      </script>
+<body onload="blocklyInit()">
+
+  <div id="blocklyDiv"></div>
+  <xml id="toolbox" style="display: none">
+    <block type="controls_if"></block>
+    <block type="logic_compare"></block>
+    <block type="controls_repeat_ext"></block>
+    <block type="math_number"></block>
+    <block type="math_arithmetic"></block>
+    <block type="text"></block>
+    <block type="text_print"></block>
+  </xml>
+
+
+          <div id="mycanvas" width="200" height="200">
+            This is my fallback content.
+        </div>
+  </body>
+</html>

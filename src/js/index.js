@@ -2,28 +2,29 @@
 
 // let person = new Person("Dave", "Prati");
 
-// document.getElementById("nameSpan").innerHTML = person.getFirstName() + " " + person.getLastName();
-    var blocklyArea = document.getElementById('blocklyArea');
-    var blocklyDiv = document.getElementById('blocklyDiv');
-    var workspace = Blockly.inject(blocklyDiv,
-        {media: '../../media/',
-         toolbox: document.getElementById('toolbox')});
-    var onresize = function(e) {
-      // Compute the absolute coordinates and dimensions of blocklyArea.
-      var element = blocklyArea;
-      var x = 0;
-      var y = 0;
-      do {
-        x += element.offsetLeft;
-        y += element.offsetTop;
-        element = element.offsetParent;
-      } while (element);
-      // Position blocklyDiv over blocklyArea.
-      blocklyDiv.style.left = x + 'px';
-      blocklyDiv.style.top = y + 'px';
-      blocklyDiv.style.width = blocklyArea.offsetWidth + 'px';
-      blocklyDiv.style.height = blocklyArea.offsetHeight + 'px';
-    };
-    window.addEventListener('resize', onresize, false);
-    onresize();
-    Blockly.svgResize(workspace);
+import * as THREE from 'three';
+
+//THREE.JS test
+var canvas, renderer;
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+canvas = document.getElementById( 'mycanvas' );
+renderer = new THREE.WebGLRenderer();
+renderer.domElement = canvas;
+var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+var cube = new THREE.Mesh( geometry, material );
+scene.add( cube );
+
+camera.position.z = 5;
+
+var render = function () {
+  requestAnimationFrame( render );
+
+  cube.rotation.x += 0.1;
+  cube.rotation.y += 0.1;
+
+  renderer.render(scene, camera);
+};
+
+render();

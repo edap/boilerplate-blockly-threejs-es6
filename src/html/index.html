@@ -1,44 +1,30 @@
 <html>
-    <head>
-        <title>Babel Test</title>
-        <link rel="stylesheet" type="text/css" href="css/main.css">
-        <script src="blockly/blockly_compressed.js"></script>
-        <script src="blockly/blocks_compressed.js"></script>
-        <script src="blockly/msg/js/en.js"></script>
-    </head>
+<head>
+  <title>Ugly Page Editor</title>
+  <link rel="stylesheet" type="text/css" href="css/main.css">
+  <!-- function that gets called once Blockly frame loads //-->
+  <script type="text/javascript">
+    window.blockly_loaded = function(blockly) {
+      return window.Blockly = blockly;
+    }
+
+    window.run_code = function() {
+      code = window.Blockly.JavaScript.workspaceToCode();
+      eval(code);
+    }
+  </script>
+</head>
 <body>
-  <table>
-    <tr>
-      <td>
-        <h1><a href="https://developers.google.com/blockly/">Blockly</a> &gt;
-          <a href="../index.html">Demos</a> &gt; Resizable Blockly (Part 2)</h1>
-
-        <p>
-          Once an <a href="index.html">area is defined</a>, Blockly can be
-          injected and positioned over the area.
-          A resize handler keeps it in position as the page changes.
-        </p>
-
-        <p>&rarr; More info on <a href="https://developers.google.com/blockly/guides/configure/web/resizable">injecting resizable Blockly</a>&hellip;</p>
-      </td>
-    </tr>
-    <tr>
-      <td id="blocklyArea">
-      </td>
-    </tr>
-  </table>
-
-  <div id="blocklyDiv" style="position: absolute"></div>
-
-  <xml id="toolbox" style="display: none">
-    <block type="controls_if"></block>
-    <block type="logic_compare"></block>
-    <block type="controls_repeat_ext"></block>
-    <block type="math_number"></block>
-    <block type="math_arithmetic"></block>
-    <block type="text"></block>
-    <block type="text_print"></block>
-  </xml>
+  <h1 id="header">Ugly Page Editor</h1>
+  <div id="blockly_editor">
+    <!-- Blockly will be injected in the iframe below //-->
+    <iframe id="blockly" src="blockly.html" width="100%"></iframe>
+  </div>
+  <p id="description">Blockly is a Visual Programming Editor that allows people to 
+    manipulate programs and code using "code blocks" instead of text.</p>
+  <button id="button_run" onclick="run_code()">
+    Run Code Block
+  </button>
   <script src="build.js"></script>
-  </body>
+</body>
 </html>
