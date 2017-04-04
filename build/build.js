@@ -43303,40 +43303,98 @@
 },{}],2:[function(require,module,exports){
 'use strict';
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _three = require('three');
 
 var THREE = _interopRequireWildcard(_three);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-//THREE.JS test
-var canvas, renderer; // import Person from "./person";
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-// let person = new Person("Dave", "Prati");
+var Actor = function () {
+    function Actor() {
+        _classCallCheck(this, Actor);
 
-var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-canvas = document.getElementById('mycanvas');
-renderer = new THREE.WebGLRenderer();
-renderer.domElement = canvas;
-var geometry = new THREE.BoxGeometry(1, 1, 1);
-var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-var cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
+        var geometry = new THREE.BoxGeometry(1, 1, 1);
+        var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        this.mesh = new THREE.Mesh(geometry, material);
+    }
 
-camera.position.z = 5;
+    _createClass(Actor, [{
+        key: 'getMesh',
+        value: function getMesh() {
+            return this.mesh;
+        }
+    }, {
+        key: 'rotateX',
+        value: function rotateX(rotationDeg) {
+            this.mesh.rotation.x += rotationDeg;
+        }
+    }, {
+        key: 'rotateY',
+        value: function rotateY(rotationDeg) {
+            this.mesh.rotation.y += rotationDeg;
+        }
+    }]);
+
+    return Actor;
+}();
+
+exports.default = Actor;
+
+},{"three":1}],3:[function(require,module,exports){
+'use strict';
+
+var _three = require('three');
+
+var THREE = _interopRequireWildcard(_three);
+
+var _actor = require('./actor');
+
+var _actor2 = _interopRequireDefault(_actor);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+var actor = void 0,
+    renderer = void 0,
+    scene = void 0,
+    camera = void 0,
+    canvas = void 0;
+
+function init() {
+	var halfScreenWidth = window.innerWidth / 2;
+	var halfScreenHeight = window.innerHeight / 2;
+
+	scene = new THREE.Scene();
+	camera = new THREE.PerspectiveCamera(75, halfScreenWidth / halfScreenHeight, 0.1, 1000);
+	canvas = document.getElementById('game-canvas');
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(halfScreenWidth, halfScreenHeight);
+	canvas.appendChild(renderer.domElement);
+
+	actor = new _actor2.default();
+	scene.add(actor.getMesh());
+	camera.position.z = 5;
+	render();
+}
 
 var render = function render() {
-  requestAnimationFrame(render);
-
-  cube.rotation.x += 0.1;
-  cube.rotation.y += 0.1;
-
-  renderer.render(scene, camera);
+	requestAnimationFrame(render);
+	actor.rotateX(0.1);
+	actor.rotateY(0.1);
+	renderer.render(scene, camera);
 };
 
-render();
+init();
 
-},{"three":1}]},{},[2])
+},{"./actor":2,"three":1}]},{},[3])
 
 //# sourceMappingURL=build.js.map

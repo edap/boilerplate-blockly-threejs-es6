@@ -16,12 +16,6 @@
         );
         // Let the top-level application know that Blockly is ready.
         window.parent.blockly_loaded(Blockly);
-
-        var rootBlock = Blockly.Block.obtain(Blockly.mainWorkspace, 'page_settings');
-        rootBlock.initSvg();
-        rootBlock.render();
-        rootBlock.setMovable(false);
-        rootBlock.setDeletable(false);
       };
       </script>
 <body onload="blocklyInit()">
@@ -37,9 +31,5 @@
     <block type="text_print"></block>
   </xml>
 
-
-          <div id="mycanvas" width="200" height="200">
-            This is my fallback content.
-        </div>
   </body>
 </html>
