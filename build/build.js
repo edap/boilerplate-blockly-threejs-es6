@@ -43370,6 +43370,7 @@ var actor = void 0,
     canvas = void 0;
 
 function init() {
+	console.log(window.Blockly);
 	var halfScreenWidth = window.innerWidth / 2;
 	var halfScreenHeight = window.innerHeight / 2;
 
@@ -43386,14 +43387,24 @@ function init() {
 	render();
 }
 
-var render = function render() {
+function render() {
 	requestAnimationFrame(render);
 	actor.rotateX(0.1);
 	actor.rotateY(0.1);
 	renderer.render(scene, camera);
 };
 
-init();
+window.blockly_loaded = function (blockly) {
+	console.log("called");
+	init();
+	return window.Blockly = blockly;
+};
+
+window.run_code = function () {
+	console.log(window.Blockly.mainWorkspace);
+	var code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
+	eval(code);
+};
 
 },{"./actor":2,"three":1}]},{},[3])
 

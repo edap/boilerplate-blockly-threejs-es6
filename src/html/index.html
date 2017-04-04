@@ -1,22 +1,12 @@
 <html>
 <head>
-  <title>Blockly and Threejs boilerplate</title>
+  <title>Blockly, es6 and Threejs boilerplate</title>
   <link rel="stylesheet" type="text/css" href="css/main.css">
   <!-- function that gets called once Blockly frame loads //-->
-  <script type="text/javascript">
-    window.blockly_loaded = function(blockly) {
-      return window.Blockly = blockly;
-    }
 
-    window.run_code = function() {
-      console.log(window.Blockly.mainWorkspace);
-      code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
-      eval(code);
-    }
-  </script>
 </head>
 <body>
-  <h1 id="header">Ugly Page Editor</h1>
+  <h1 id="header">Blockly and Threejs boilerplate</h1>
   <div class = "container">
     <div class="game-edit">
       <div id="blockly_editor">
