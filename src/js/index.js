@@ -3,8 +3,7 @@ import Actor from "./actor";
 
 let actor, renderer, scene, camera, canvas;
 
-function init(){
-	console.log(window.Blockly);
+function initGame(){
 	let halfScreenWidth = window.innerWidth/2;
 	let halfScreenHeight = window.innerHeight/2;
 
@@ -19,6 +18,13 @@ function init(){
 	scene.add( actor.getMesh() );
 	camera.position.z = 5;
 	render();
+
+	window.Blockly.JavaScript['move_forward'] = function(block) {
+		var dropdown_move_distance = block.getFieldValue('move_distance');
+		// TODO: Assemble JavaScript into code variable.
+		var code = "console.log('move forward');";
+		return code;
+	};
 }
 
 function render() {
@@ -27,16 +33,22 @@ function render() {
 	actor.rotateY(0.1);
 	renderer.render(scene, camera);
 };
+/*
+move forward block
+https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#h4ynt2
+*/
 
 window.blockly_loaded = function(blockly) {
-  console.log("called");
-  init();
-  return window.Blockly = blockly;
+    // init the game only after window.Blockly definition
+	window.Blockly = blockly;
+	initGame();
 }
 
 window.run_code = function() {
-  console.log(window.Blockly.mainWorkspace);
-  let code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
-  eval(code);
+	console.log(window.Blockly.mainWorkspace);
+	var code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
+	eval(code);
 }
+
+
 

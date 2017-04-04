@@ -43369,8 +43369,7 @@ var actor = void 0,
     camera = void 0,
     canvas = void 0;
 
-function init() {
-	console.log(window.Blockly);
+function initGame() {
 	var halfScreenWidth = window.innerWidth / 2;
 	var halfScreenHeight = window.innerHeight / 2;
 
@@ -43385,6 +43384,13 @@ function init() {
 	scene.add(actor.getMesh());
 	camera.position.z = 5;
 	render();
+
+	window.Blockly.JavaScript['move_forward'] = function (block) {
+		var dropdown_move_distance = block.getFieldValue('move_distance');
+		// TODO: Assemble JavaScript into code variable.
+		var code = "console.log('move forward');";
+		return code;
+	};
 }
 
 function render() {
@@ -43393,11 +43399,15 @@ function render() {
 	actor.rotateY(0.1);
 	renderer.render(scene, camera);
 };
+/*
+move forward block
+https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#h4ynt2
+*/
 
 window.blockly_loaded = function (blockly) {
-	console.log("called");
-	init();
-	return window.Blockly = blockly;
+	// init the game only after window.Blockly definition
+	window.Blockly = blockly;
+	initGame();
 };
 
 window.run_code = function () {
