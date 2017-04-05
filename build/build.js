@@ -43352,21 +43352,26 @@ var Actor = function () {
 exports.default = Actor;
 
 },{"three":1}],3:[function(require,module,exports){
-'use strict';
+"use strict";
 
-var _three = require('three');
+var _three = require("three");
 
 var THREE = _interopRequireWildcard(_three);
 
-var _actor = require('./actor');
+var _actor = require("./actor");
 
 var _actor2 = _interopRequireDefault(_actor);
+
+var _plane = require("./plane");
+
+var _plane2 = _interopRequireDefault(_plane);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 var actor = void 0,
+    plane = void 0,
     renderer = void 0,
     scene = void 0,
     camera = void 0,
@@ -43382,9 +43387,12 @@ function initGame() {
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(halfScreenWidth, halfScreenHeight);
 	canvas.appendChild(renderer.domElement);
-
+	plane = new _plane2.default();
+	plane.rotateX(-Math.PI / 4);
 	actor = new _actor2.default();
 	scene.add(actor.getMesh());
+	scene.add(plane.getMesh());
+
 	camera.position.z = 5;
 	render();
 
@@ -43418,8 +43426,8 @@ function initGame() {
 
 function render() {
 	requestAnimationFrame(render);
-	actor.rotateX(0.1);
-	actor.rotateY(0.1);
+	//actor.rotateX(0.1);
+	//actor.rotateY(0.1);
 	renderer.render(scene, camera);
 };
 /*
@@ -43445,6 +43453,49 @@ window.run_code = function () {
 	eval(code);
 };
 
-},{"./actor":2,"three":1}]},{},[3])
+},{"./actor":2,"./plane":4,"three":1}],4:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _three = require('three');
+
+var THREE = _interopRequireWildcard(_three);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Plane = function () {
+    function Plane() {
+        _classCallCheck(this, Plane);
+
+        var geometry = new THREE.PlaneBufferGeometry(10, 10, 1);
+        var material = new THREE.MeshBasicMaterial({ color: 0xe6e6e6 });
+        this.mesh = new THREE.Mesh(geometry, material);
+    }
+
+    _createClass(Plane, [{
+        key: 'getMesh',
+        value: function getMesh() {
+            return this.mesh;
+        }
+    }, {
+        key: 'rotateX',
+        value: function rotateX(rotationDeg) {
+            this.mesh.rotation.x += rotationDeg;
+        }
+    }]);
+
+    return Plane;
+}();
+
+exports.default = Plane;
+
+},{"three":1}]},{},[3])
 
 //# sourceMappingURL=build.js.map

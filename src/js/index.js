@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import Actor from "./actor";
+import Plane from "./plane";
 
-let actor, renderer, scene, camera, canvas;
+let actor, plane, renderer, scene, camera, canvas;
 
 function initGame(){
 	let halfScreenWidth = window.innerWidth/2;
@@ -13,9 +14,12 @@ function initGame(){
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(halfScreenWidth, halfScreenHeight);
 	canvas.appendChild(renderer.domElement);
-
+    plane = new Plane();
+    plane.rotateX(-Math.PI/4);
     actor = new Actor();
 	scene.add( actor.getMesh() );
+	scene.add(plane.getMesh());
+
 	camera.position.z = 5;
 	render();
 
@@ -49,8 +53,8 @@ function initGame(){
 
 function render() {
 	requestAnimationFrame( render );
-	actor.rotateX(0.1);
-	actor.rotateY(0.1);
+	//actor.rotateX(0.1);
+	//actor.rotateY(0.1);
 	renderer.render(scene, camera);
 };
 /*
