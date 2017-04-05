@@ -18,7 +18,16 @@ export default class Actor {
         this.mesh.rotation.y += rotationDeg;
     }
 
-    move(){
+    animationMove(length){
+       console.log(length);
+       this.mesh.translateZ(length);
+    }
 
+    animationTurnRight(deg){
+       console.log(deg);
+    }
+
+    animationTurnLeft(deg){
+       console.log(deg);
     }
 }

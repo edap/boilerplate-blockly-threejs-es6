@@ -1,8 +1,10 @@
 import * as THREE from 'three';
+import Stats from 'stats.js';
 import Actor from "./actor";
 import Plane from "./plane";
 
-let actor, plane, renderer, scene, camera, canvas;
+const debug = true;
+let actor, plane, renderer, scene, camera, canvas, stats;
 
 function initGame(){
 	let halfScreenWidth = window.innerWidth/2;
@@ -11,7 +13,7 @@ function initGame(){
 	scene = new THREE.Scene();
 	camera = new THREE.PerspectiveCamera( 75, halfScreenWidth/halfScreenHeight, 0.1, 1000 );
 	canvas = document.getElementById( 'game-canvas' );
-	renderer = new THREE.WebGLRenderer();
+	renderer = new THREE.WebGLRenderer({antialias:true});
 	renderer.setSize(halfScreenWidth, halfScreenHeight);
 	canvas.appendChild(renderer.domElement);
     plane = new Plane();
@@ -21,10 +23,20 @@ function initGame(){
 	scene.add(plane.getMesh());
 
 	camera.position.z = 5;
+
+	// stats
+    stats = new Stats();
+    stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+    stats.domElement.style.left=halfScreenWidth*2 -80;
+	if (debug) {
+        canvas.appendChild(stats.domElement);
+    }
+
 	render();
 
 	window.Blockly.JavaScript['actor_move_forward'] = function(block) {
         var dropdown_actor_move_forward_distance = block.getFieldValue('actor_move_forward_distance');
+        actor.animationMove(dropdown_actor_move_forward_distance);
 		// TODO: Assemble JavaScript into code variable.
 		var code = "console.log('move forward');";
 		return code;
@@ -52,10 +64,13 @@ function initGame(){
 }
 
 function render() {
+
 	requestAnimationFrame( render );
 	//actor.rotateX(0.1);
 	//actor.rotateY(0.1);
+	stats.begin();
 	renderer.render(scene, camera);
+	stats.end();
 };
 /*
 move forward block
@@ -75,8 +90,8 @@ window.blockly_loaded = function(blockly) {
 }
 
 window.run_code = function() {
-	console.log(window.Blockly.mainWorkspace);
 	var code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
+	console.log(window.Blockly.mainWorkspace);
 	eval(code);
 }
 
