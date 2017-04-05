@@ -17,4 +17,8 @@ export default class Actor {
     rotateY(rotationDeg){
         this.mesh.rotation.y += rotationDeg;
     }
+
+    move(){
+
+    }
 }

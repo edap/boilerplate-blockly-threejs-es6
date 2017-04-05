@@ -43341,6 +43341,9 @@ var Actor = function () {
         value: function rotateY(rotationDeg) {
             this.mesh.rotation.y += rotationDeg;
         }
+    }, {
+        key: 'move',
+        value: function move() {}
     }]);
 
     return Actor;
