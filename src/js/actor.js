@@ -7,6 +7,46 @@ export default class Actor {
         this.mesh = new THREE.Mesh( geometry, material );
     }
 
+    consume(instructions){
+        // how to stop chains
+        // put some guards here https://github.com/tweenjs/tween.js/issues/75
+        // how to stop https://github.com/tweenjs/tween.js/pull/95/commits/d8b2deb02c2d6fad9b7fdb5a9511669ef86d07dd
+        let tweens = this._buildTweensChain(instructions);
+        if(tweens.length>0){
+            tweens[0].start();
+        }else{
+            console.log("no instructions to execute");
+        }
+    }
+
+    _buildTweensChain(instructions){
+        let tweens = [];
+        instructions.forEach((command)=>{
+            let key = command["type"];
+            let val = command["value"];
+            debugger;
+            switch(key){
+                case "move_forward":
+                    tweens.push(this._moveForwardTween(val));
+                break;
+                case "turn_right":
+                    tweens.push(this._turnRightTween(val));
+                break;
+                default:
+                    console.log("action "+key+" not implemented");
+                break
+            }
+            console.log(command);
+        });
+        for(let i = 0; i< tweens.length; i++){
+            if(i!= tweens.length-1){
+                tweens[i].chain(tweens[i+1]);  
+            }
+        }
+        return tweens;   
+
+    }
+
     getMesh() {
        return this.mesh;
     }
@@ -19,13 +59,30 @@ export default class Actor {
         this.mesh.rotation.y += rotationDeg;
     }
 
-    animationMove(length){
+    _moveForwardTween(_length){
+        let length = Number(_length);
+        let pos = this.mesh.position;
+        let target = new THREE.Vector3(0.0, 0.0, length/10);
+        let rotationMatrix = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
+        target.applyMatrix4(rotationMatrix);
+        let tween = new TWEEN.Tween(pos).to(target, 300);
+        return tween;
+    }
 
-    var tween = new TWEEN.Tween(this.mesh.position)
-        .to({ x: 1, y: 0, z: 1 }, 1000)
-        .start();
-       //console.log(length);
-       //this.mesh.translateZ(length);
+    _turnRightTween(_length){
+        let length = Number(_length);
+        let pos = this.mesh.position;
+        let target = new THREE.Vector3(0.0, 0.0, length/10);
+        let rotationMatrix = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
+        target.applyMatrix4(rotationMatrix);
+        let tween = new TWEEN.Tween(pos).to(target, 300);
+        return tween;
+    }
+
+    animationMove(length){
+        //let pos = this.mesh.position;
+        let tween = this._moveForwardTween(length);
+        tween.start();
     }
 
     animationTurnRight(deg){
@@ -34,5 +91,9 @@ export default class Actor {
 
     animationTurnLeft(deg){
        console.log(deg);
+    }
+
+    update(time){
+        TWEEN.update( time );
     }
 }

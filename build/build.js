@@ -44409,6 +44409,49 @@ var Actor = function () {
     }
 
     _createClass(Actor, [{
+        key: 'consume',
+        value: function consume(instructions) {
+            // how to stop chains
+            // put some guards here https://github.com/tweenjs/tween.js/issues/75
+            // how to stop https://github.com/tweenjs/tween.js/pull/95/commits/d8b2deb02c2d6fad9b7fdb5a9511669ef86d07dd
+            var tweens = this._buildTweensChain(instructions);
+            if (tweens.length > 0) {
+                tweens[0].start();
+            } else {
+                console.log("no instructions to execute");
+            }
+        }
+    }, {
+        key: '_buildTweensChain',
+        value: function _buildTweensChain(instructions) {
+            var _this = this;
+
+            var tweens = [];
+            instructions.forEach(function (command) {
+                var key = command["type"];
+                var val = command["value"];
+                debugger;
+                switch (key) {
+                    case "move_forward":
+                        tweens.push(_this._moveForwardTween(val));
+                        break;
+                    case "turn_right":
+                        tweens.push(_this._turnRightTween(val));
+                        break;
+                    default:
+                        console.log("action " + key + " not implemented");
+                        break;
+                }
+                console.log(command);
+            });
+            for (var i = 0; i < tweens.length; i++) {
+                if (i != tweens.length - 1) {
+                    tweens[i].chain(tweens[i + 1]);
+                }
+            }
+            return tweens;
+        }
+    }, {
         key: 'getMesh',
         value: function getMesh() {
             return this.mesh;
@@ -44424,12 +44467,33 @@ var Actor = function () {
             this.mesh.rotation.y += rotationDeg;
         }
     }, {
+        key: '_moveForwardTween',
+        value: function _moveForwardTween(_length) {
+            var length = Number(_length);
+            var pos = this.mesh.position;
+            var target = new THREE.Vector3(0.0, 0.0, length / 10);
+            var rotationMatrix = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
+            target.applyMatrix4(rotationMatrix);
+            var tween = new _tween2.default.Tween(pos).to(target, 300);
+            return tween;
+        }
+    }, {
+        key: '_turnRightTween',
+        value: function _turnRightTween(_length) {
+            var length = Number(_length);
+            var pos = this.mesh.position;
+            var target = new THREE.Vector3(0.0, 0.0, length / 10);
+            var rotationMatrix = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
+            target.applyMatrix4(rotationMatrix);
+            var tween = new _tween2.default.Tween(pos).to(target, 300);
+            return tween;
+        }
+    }, {
         key: 'animationMove',
         value: function animationMove(length) {
-
-            var tween = new _tween2.default.Tween(this.mesh.position).to({ x: 1, y: 0, z: 1 }, 1000).start();
-            //console.log(length);
-            //this.mesh.translateZ(length);
+            //let pos = this.mesh.position;
+            var tween = this._moveForwardTween(length);
+            tween.start();
         }
     }, {
         key: 'animationTurnRight',
@@ -44441,6 +44505,11 @@ var Actor = function () {
         value: function animationTurnLeft(deg) {
             console.log(deg);
         }
+    }, {
+        key: 'update',
+        value: function update(time) {
+            _tween2.default.update(time);
+        }
     }]);
 
     return Actor;
@@ -44449,6 +44518,29 @@ var Actor = function () {
 exports.default = Actor;
 
 },{"three":3,"tween.js":4}],6:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _three = require('three');
+
+var THREE = _interopRequireWildcard(_three);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Commander = function Commander(instruction) {
+	_classCallCheck(this, Commander);
+
+	this.instruction = instruction;
+};
+
+exports.default = Commander;
+
+},{"three":3}],7:[function(require,module,exports){
 'use strict';
 
 var _three = require('three');
@@ -44471,11 +44563,16 @@ var _plane = require('./plane');
 
 var _plane2 = _interopRequireDefault(_plane);
 
+var _commander = require('./commander');
+
+var _commander2 = _interopRequireDefault(_commander);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 var debug = true;
+var instructions = [];
 var actor = void 0,
     plane = void 0,
     renderer = void 0,
@@ -44514,19 +44611,22 @@ function initGame() {
 
 	window.Blockly.JavaScript['actor_move_forward'] = function (block) {
 		var dropdown_actor_move_forward_distance = block.getFieldValue('actor_move_forward_distance');
-		actor.animationMove(dropdown_actor_move_forward_distance);
+		//actor.animationMove(dropdown_actor_move_forward_distance);
+		instructions.push({ "type": "move_forward", "value": dropdown_actor_move_forward_distance });
 		var code = "console.log('move forward');";
 		return code;
 	};
 
 	window.Blockly.JavaScript['actor_turn_right'] = function (block) {
 		var angle_actor_turn_right_value = block.getFieldValue('actor_turn_right_value');
+		instructions.push({ "type": "turn_right", "value": angle_actor_turn_right_value });
 		var code = "console.log('actor_turn_right');";
 		return code;
 	};
 
 	window.Blockly.JavaScript['actor_turn_left'] = function (block) {
-		var angle_actor_turn_right_value = block.getFieldValue('actor_turn_left_value');
+		var angle_actor_turn_left_value = block.getFieldValue('actor_turn_left_value');
+		instructions.push({ "type": "turn_left", "value": angle_actor_turn_left_value });
 		var code = "console.log('actor_turn_left');";
 		return code;
 	};
@@ -44539,8 +44639,9 @@ function initGame() {
 
 function animate(time) {
 	stats.begin();
-	_tween2.default.update(time);
+	actor.update(time);
 	render();
+	//console.log(actor.getMesh().position)
 	stats.end();
 	requestAnimationFrame(animate);
 }
@@ -44556,12 +44657,17 @@ window.blockly_loaded = function (blockly) {
 };
 
 window.run_code = function () {
+	//reset instructions if the player did not complete everything
+	// probably you should reset the position too
+	instructions = [];
 	var code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
-	console.log(window.Blockly.mainWorkspace);
+	console.log(instructions);
 	eval(code);
+	console.log();
+	actor.consume(instructions);
 };
 
-},{"./actor":5,"./plane":7,"stats.js":2,"three":3,"tween.js":4}],7:[function(require,module,exports){
+},{"./actor":5,"./commander":6,"./plane":8,"stats.js":2,"three":3,"tween.js":4}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -44604,6 +44710,6 @@ var Plane = function () {
 
 exports.default = Plane;
 
-},{"three":3}]},{},[6])
+},{"three":3}]},{},[7])
 
 //# sourceMappingURL=build.js.map

@@ -3,8 +3,10 @@ import TWEEN from 'tween.js';
 import Stats from 'stats.js';
 import Actor from "./actor";
 import Plane from "./plane";
+import Commander from "./commander";
 
 const debug = true;
+let instructions = [];
 let actor, plane, renderer, scene, camera, canvas, stats;
 
 function initGame(){
@@ -13,7 +15,7 @@ function initGame(){
 
 	scene = new THREE.Scene();
 	camera = new THREE.PerspectiveCamera( 75, halfScreenWidth/halfScreenHeight, 0.1, 1000 );
-	canvas = document.getElementById( 'game-canvas' );
+	canvas = document.getElementById('game-canvas');
 	renderer = new THREE.WebGLRenderer({antialias:true});
 	renderer.setSize(halfScreenWidth, halfScreenHeight);
 	canvas.appendChild(renderer.domElement);
@@ -37,19 +39,22 @@ function initGame(){
 
 	window.Blockly.JavaScript['actor_move_forward'] = function(block) {
         var dropdown_actor_move_forward_distance = block.getFieldValue('actor_move_forward_distance');
-        actor.animationMove(dropdown_actor_move_forward_distance);
+        //actor.animationMove(dropdown_actor_move_forward_distance);
+        instructions.push({"type":"move_forward", "value": dropdown_actor_move_forward_distance});
 		var code = "console.log('move forward');";
 		return code;
 	};
 
     window.Blockly.JavaScript['actor_turn_right'] = function(block) {
         var angle_actor_turn_right_value = block.getFieldValue('actor_turn_right_value');
+        instructions.push({"type":"turn_right", "value": angle_actor_turn_right_value});
 		var code = "console.log('actor_turn_right');";
 		return code;
 	};
 
     window.Blockly.JavaScript['actor_turn_left'] = function(block) {
-        var angle_actor_turn_right_value = block.getFieldValue('actor_turn_left_value');
+        var angle_actor_turn_left_value = block.getFieldValue('actor_turn_left_value');
+        instructions.push({"type":"turn_left", "value": angle_actor_turn_left_value});
 		var code = "console.log('actor_turn_left');";
 		return code;
 	};
@@ -62,8 +67,9 @@ function initGame(){
 
 function animate(time) {
 	stats.begin();
-	TWEEN.update( time );
+	actor.update(time)
 	render();
+	//console.log(actor.getMesh().position)
     stats.end();
     requestAnimationFrame( animate );
 }
@@ -79,9 +85,14 @@ window.blockly_loaded = function(blockly) {
 }
 
 window.run_code = function() {
+	//reset instructions if the player did not complete everything
+	// probably you should reset the position too
+	instructions=[];
 	var code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
-	console.log(window.Blockly.mainWorkspace);
+	console.log(instructions);
 	eval(code);
+	console.log();
+	actor.consume(instructions);
 }
 
 
