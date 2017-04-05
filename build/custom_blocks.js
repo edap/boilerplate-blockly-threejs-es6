@@ -1,3 +1,14 @@
+/*
+move forward block
+https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#h4ynt2
+
+turn actor right
+https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#n9y6ca
+
+actor jump block
+https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#av6o3o
+*/
+
  Blockly.Blocks['actor_move_forward'] = {
   init: function() {
     this.appendDummyInput()
