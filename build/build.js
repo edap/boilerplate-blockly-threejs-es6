@@ -44516,14 +44516,14 @@ var actor = void 0,
 
 function initGame() {
 	clock = new THREE.Clock();
-	var halfScreenWidth = window.innerWidth / 2;
-	var halfScreenHeight = window.innerHeight / 2;
+	var screenWidth = window.innerWidth / 2;
+	var screenHeight = window.innerHeight;
 
 	scene = new THREE.Scene();
-	camera = new THREE.PerspectiveCamera(75, halfScreenWidth / halfScreenHeight, 0.1, 1000);
+	camera = new THREE.PerspectiveCamera(75, screenWidth / screenHeight, 0.1, 1000);
 	canvas = document.getElementById('game-canvas');
 	renderer = new THREE.WebGLRenderer({ antialias: true });
-	renderer.setSize(halfScreenWidth, halfScreenHeight);
+	renderer.setSize(screenWidth, screenHeight);
 	canvas.appendChild(renderer.domElement);
 	controls = new OrbitControls(camera, renderer.domElement);
 
@@ -44534,11 +44534,12 @@ function initGame() {
 	scene.add(plane.getMesh());
 
 	camera.position.z = 5;
+	camera.position.y = 2;
 
 	// stats
 	stats = new _stats2.default();
 	stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
-	stats.domElement.style.left = halfScreenWidth * 2 - 80;
+	stats.domElement.style.left = screenWidth * 2 - 80;
 	if (debug) {
 		canvas.appendChild(stats.domElement);
 	}
@@ -44644,8 +44645,8 @@ var Plane = function () {
     function Plane() {
         _classCallCheck(this, Plane);
 
-        var geometry = new THREE.PlaneBufferGeometry(10, 10, 1);
-        var material = new THREE.MeshBasicMaterial({ color: 0xe6e6e6 });
+        var geometry = new THREE.PlaneBufferGeometry(50, 50, 50, 50);
+        var material = new THREE.MeshBasicMaterial({ color: 0xe6e6e6, wireframe: true });
         this.mesh = new THREE.Mesh(geometry, material);
     }
 
