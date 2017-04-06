@@ -13,7 +13,7 @@ https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#av6o3o
   init: function() {
     this.appendDummyInput()
         .appendField("move forward")
-        .appendField(new Blockly.FieldDropdown([["10","10"], ["20","20"], ["30","30"]]), "actor_move_forward_distance");
+        .appendField(new Blockly.FieldDropdown([["1","1"], ["2","2"], ["3","3"]]), "actor_move_forward_distance");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour(230);

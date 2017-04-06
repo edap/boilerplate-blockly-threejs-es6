@@ -7,9 +7,10 @@ import Commander from "./commander";
 const debug = true;
 const OrbitControls = require('three-orbit-controls')(THREE);
 let instructions = [];
-let actor, plane, renderer, scene, camera, canvas, stats, controls;
+let actor, plane, renderer, scene, camera, canvas, stats, controls, clock;
 
 function initGame(){
+	clock = new THREE.Clock();
 	let halfScreenWidth = window.innerWidth/2;
 	let halfScreenHeight = window.innerHeight/2;
 
@@ -44,21 +45,33 @@ function initGame(){
 	window.Blockly.JavaScript['actor_move_forward'] = function(block) {
         var dropdown_actor_move_forward_distance = block.getFieldValue('actor_move_forward_distance');
         //actor.animationMove(dropdown_actor_move_forward_distance);
-        instructions.push({"type":"move_forward", "value": dropdown_actor_move_forward_distance});
+        instructions.push({
+        	"type":"move_forward",
+        	"value": dropdown_actor_move_forward_distance,
+        	"duration": (actor.getStepDuration() * dropdown_actor_move_forward_distance)
+        });
 		var code = "console.log('move forward');";
 		return code;
 	};
 
     window.Blockly.JavaScript['actor_turn_right'] = function(block) {
         var angle_actor_turn_right_value = block.getFieldValue('actor_turn_right_value');
-        instructions.push({"type":"turn_right", "value": angle_actor_turn_right_value});
+        instructions.push({
+        	"type":"turn_right",
+        	"value": angle_actor_turn_right_value,
+        	"duration": actor.getRotationDuration()
+        });
 		var code = "console.log('actor_turn_right');";
 		return code;
 	};
 
     window.Blockly.JavaScript['actor_turn_left'] = function(block) {
         var angle_actor_turn_left_value = block.getFieldValue('actor_turn_left_value');
-        instructions.push({"type":"turn_left", "value": angle_actor_turn_left_value});
+        instructions.push({
+        	"type":"turn_left",
+        	"value": angle_actor_turn_left_value,
+        	"duration": actor.getRotationDuration()
+        });
 		var code = "console.log('actor_turn_left');";
 		return code;
 	};
@@ -69,8 +82,10 @@ function initGame(){
 	};
 }
 
-function animate(time) {
+function animate() {
 	stats.begin();
+    let delta = clock.getDelta();
+    let time = clock.getElapsedTime();
 	actor.update(time)
 	render();
 	controls.update;
@@ -99,7 +114,7 @@ window.run_code = function() {
 	instructions=[];
 	var code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
 	eval(code);
-	actor.consume(instructions);
+	actor.startConsume(instructions);
 	//actor.testChained();
 }
 

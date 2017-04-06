@@ -1,193 +1,11 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-},{}],2:[function(require,module,exports){
 // stats.js - http://github.com/mrdoob/stats.js
 (function(f,e){"object"===typeof exports&&"undefined"!==typeof module?module.exports=e():"function"===typeof define&&define.amd?define(e):f.Stats=e()})(this,function(){var f=function(){function e(a){c.appendChild(a.dom);return a}function u(a){for(var d=0;d<c.children.length;d++)c.children[d].style.display=d===a?"block":"none";l=a}var l=0,c=document.createElement("div");c.style.cssText="position:fixed;top:0;left:0;cursor:pointer;opacity:0.9;z-index:10000";c.addEventListener("click",function(a){a.preventDefault();
 u(++l%c.children.length)},!1);var k=(performance||Date).now(),g=k,a=0,r=e(new f.Panel("FPS","#0ff","#002")),h=e(new f.Panel("MS","#0f0","#020"));if(self.performance&&self.performance.memory)var t=e(new f.Panel("MB","#f08","#201"));u(0);return{REVISION:16,dom:c,addPanel:e,showPanel:u,begin:function(){k=(performance||Date).now()},end:function(){a++;var c=(performance||Date).now();h.update(c-k,200);if(c>g+1E3&&(r.update(1E3*a/(c-g),100),g=c,a=0,t)){var d=performance.memory;t.update(d.usedJSHeapSize/
 1048576,d.jsHeapSizeLimit/1048576)}return c},update:function(){k=this.end()},domElement:c,setMode:u}};f.Panel=function(e,f,l){var c=Infinity,k=0,g=Math.round,a=g(window.devicePixelRatio||1),r=80*a,h=48*a,t=3*a,v=2*a,d=3*a,m=15*a,n=74*a,p=30*a,q=document.createElement("canvas");q.width=r;q.height=h;q.style.cssText="width:80px;height:48px";var b=q.getContext("2d");b.font="bold "+9*a+"px Helvetica,Arial,sans-serif";b.textBaseline="top";b.fillStyle=l;b.fillRect(0,0,r,h);b.fillStyle=f;b.fillText(e,t,v);
 b.fillRect(d,m,n,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d,m,n,p);return{dom:q,update:function(h,w){c=Math.min(c,h);k=Math.max(k,h);b.fillStyle=l;b.globalAlpha=1;b.fillRect(0,0,r,m);b.fillStyle=f;b.fillText(g(h)+" "+e+" ("+g(c)+"-"+g(k)+")",t,v);b.drawImage(q,d+a,m,n-a,p,d,m,n-a,p);b.fillRect(d+n-a,m,a,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d+n-a,m,a,g((1-h/w)*p))}}};return f});
 
-},{}],3:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 module.exports = function( THREE ) {
 	/**
 	 * @author qiao / https://github.com/qiao
@@ -1209,7 +1027,7 @@ module.exports = function( THREE ) {
 	return OrbitControls;
 };
 
-},{}],4:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -44511,894 +44329,7 @@ module.exports = function( THREE ) {
 
 })));
 
-},{}],5:[function(require,module,exports){
-(function (process){
-/**
- * Tween.js - Licensed under the MIT license
- * https://github.com/tweenjs/tween.js
- * ----------------------------------------------
- *
- * See https://github.com/tweenjs/tween.js/graphs/contributors for the full list of contributors.
- * Thank you all, you're awesome!
- */
-
-var TWEEN = TWEEN || (function () {
-
-	var _tweens = [];
-
-	return {
-
-		getAll: function () {
-
-			return _tweens;
-
-		},
-
-		removeAll: function () {
-
-			_tweens = [];
-
-		},
-
-		add: function (tween) {
-
-			_tweens.push(tween);
-
-		},
-
-		remove: function (tween) {
-
-			var i = _tweens.indexOf(tween);
-
-			if (i !== -1) {
-				_tweens.splice(i, 1);
-			}
-
-		},
-
-		update: function (time, preserve) {
-
-			if (_tweens.length === 0) {
-				return false;
-			}
-
-			var i = 0;
-
-			time = time !== undefined ? time : TWEEN.now();
-
-			while (i < _tweens.length) {
-
-				if (_tweens[i].update(time) || preserve) {
-					i++;
-				} else {
-					_tweens.splice(i, 1);
-				}
-
-			}
-
-			return true;
-
-		}
-	};
-
-})();
-
-
-// Include a performance.now polyfill.
-// In node.js, use process.hrtime.
-if (typeof (window) === 'undefined' && typeof (process) !== 'undefined') {
-	TWEEN.now = function () {
-		var time = process.hrtime();
-
-		// Convert [seconds, nanoseconds] to milliseconds.
-		return time[0] * 1000 + time[1] / 1000000;
-	};
-}
-// In a browser, use window.performance.now if it is available.
-else if (typeof (window) !== 'undefined' &&
-         window.performance !== undefined &&
-		 window.performance.now !== undefined) {
-	// This must be bound, because directly assigning this function
-	// leads to an invocation exception in Chrome.
-	TWEEN.now = window.performance.now.bind(window.performance);
-}
-// Use Date.now if it is available.
-else if (Date.now !== undefined) {
-	TWEEN.now = Date.now;
-}
-// Otherwise, use 'new Date().getTime()'.
-else {
-	TWEEN.now = function () {
-		return new Date().getTime();
-	};
-}
-
-
-TWEEN.Tween = function (object) {
-
-	var _object = object;
-	var _valuesStart = {};
-	var _valuesEnd = {};
-	var _valuesStartRepeat = {};
-	var _duration = 1000;
-	var _repeat = 0;
-	var _repeatDelayTime;
-	var _yoyo = false;
-	var _isPlaying = false;
-	var _reversed = false;
-	var _delayTime = 0;
-	var _startTime = null;
-	var _easingFunction = TWEEN.Easing.Linear.None;
-	var _interpolationFunction = TWEEN.Interpolation.Linear;
-	var _chainedTweens = [];
-	var _onStartCallback = null;
-	var _onStartCallbackFired = false;
-	var _onUpdateCallback = null;
-	var _onCompleteCallback = null;
-	var _onStopCallback = null;
-
-	this.to = function (properties, duration) {
-
-		_valuesEnd = properties;
-
-		if (duration !== undefined) {
-			_duration = duration;
-		}
-
-		return this;
-
-	};
-
-	this.start = function (time) {
-
-		TWEEN.add(this);
-
-		_isPlaying = true;
-
-		_onStartCallbackFired = false;
-
-		_startTime = time !== undefined ? time : TWEEN.now();
-		_startTime += _delayTime;
-
-		for (var property in _valuesEnd) {
-
-			// Check if an Array was provided as property value
-			if (_valuesEnd[property] instanceof Array) {
-
-				if (_valuesEnd[property].length === 0) {
-					continue;
-				}
-
-				// Create a local copy of the Array with the start value at the front
-				_valuesEnd[property] = [_object[property]].concat(_valuesEnd[property]);
-
-			}
-
-			// If `to()` specifies a property that doesn't exist in the source object,
-			// we should not set that property in the object
-			if (_object[property] === undefined) {
-				continue;
-			}
-
-			// Save the starting value.
-			_valuesStart[property] = _object[property];
-
-			if ((_valuesStart[property] instanceof Array) === false) {
-				_valuesStart[property] *= 1.0; // Ensures we're using numbers, not strings
-			}
-
-			_valuesStartRepeat[property] = _valuesStart[property] || 0;
-
-		}
-
-		return this;
-
-	};
-
-	this.stop = function () {
-
-		if (!_isPlaying) {
-			return this;
-		}
-
-		TWEEN.remove(this);
-		_isPlaying = false;
-
-		if (_onStopCallback !== null) {
-			_onStopCallback.call(_object, _object);
-		}
-
-		this.stopChainedTweens();
-		return this;
-
-	};
-
-	this.end = function () {
-
-		this.update(_startTime + _duration);
-		return this;
-
-	};
-
-	this.stopChainedTweens = function () {
-
-		for (var i = 0, numChainedTweens = _chainedTweens.length; i < numChainedTweens; i++) {
-			_chainedTweens[i].stop();
-		}
-
-	};
-
-	this.delay = function (amount) {
-
-		_delayTime = amount;
-		return this;
-
-	};
-
-	this.repeat = function (times) {
-
-		_repeat = times;
-		return this;
-
-	};
-
-	this.repeatDelay = function (amount) {
-
-		_repeatDelayTime = amount;
-		return this;
-
-	};
-
-	this.yoyo = function (yoyo) {
-
-		_yoyo = yoyo;
-		return this;
-
-	};
-
-
-	this.easing = function (easing) {
-
-		_easingFunction = easing;
-		return this;
-
-	};
-
-	this.interpolation = function (interpolation) {
-
-		_interpolationFunction = interpolation;
-		return this;
-
-	};
-
-	this.chain = function () {
-
-		_chainedTweens = arguments;
-		return this;
-
-	};
-
-	this.onStart = function (callback) {
-
-		_onStartCallback = callback;
-		return this;
-
-	};
-
-	this.onUpdate = function (callback) {
-
-		_onUpdateCallback = callback;
-		return this;
-
-	};
-
-	this.onComplete = function (callback) {
-
-		_onCompleteCallback = callback;
-		return this;
-
-	};
-
-	this.onStop = function (callback) {
-
-		_onStopCallback = callback;
-		return this;
-
-	};
-
-	this.update = function (time) {
-
-		var property;
-		var elapsed;
-		var value;
-
-		if (time < _startTime) {
-			return true;
-		}
-
-		if (_onStartCallbackFired === false) {
-
-			if (_onStartCallback !== null) {
-				_onStartCallback.call(_object, _object);
-			}
-
-			_onStartCallbackFired = true;
-		}
-
-		elapsed = (time - _startTime) / _duration;
-		elapsed = elapsed > 1 ? 1 : elapsed;
-
-		value = _easingFunction(elapsed);
-
-		for (property in _valuesEnd) {
-
-			// Don't update properties that do not exist in the source object
-			if (_valuesStart[property] === undefined) {
-				continue;
-			}
-
-			var start = _valuesStart[property] || 0;
-			var end = _valuesEnd[property];
-
-			if (end instanceof Array) {
-
-				_object[property] = _interpolationFunction(end, value);
-
-			} else {
-
-				// Parses relative end values with start as base (e.g.: +10, -3)
-				if (typeof (end) === 'string') {
-
-					if (end.charAt(0) === '+' || end.charAt(0) === '-') {
-						end = start + parseFloat(end);
-					} else {
-						end = parseFloat(end);
-					}
-				}
-
-				// Protect against non numeric properties.
-				if (typeof (end) === 'number') {
-					_object[property] = start + (end - start) * value;
-				}
-
-			}
-
-		}
-
-		if (_onUpdateCallback !== null) {
-			_onUpdateCallback.call(_object, value);
-		}
-
-		if (elapsed === 1) {
-
-			if (_repeat > 0) {
-
-				if (isFinite(_repeat)) {
-					_repeat--;
-				}
-
-				// Reassign starting values, restart by making startTime = now
-				for (property in _valuesStartRepeat) {
-
-					if (typeof (_valuesEnd[property]) === 'string') {
-						_valuesStartRepeat[property] = _valuesStartRepeat[property] + parseFloat(_valuesEnd[property]);
-					}
-
-					if (_yoyo) {
-						var tmp = _valuesStartRepeat[property];
-
-						_valuesStartRepeat[property] = _valuesEnd[property];
-						_valuesEnd[property] = tmp;
-					}
-
-					_valuesStart[property] = _valuesStartRepeat[property];
-
-				}
-
-				if (_yoyo) {
-					_reversed = !_reversed;
-				}
-
-				if (_repeatDelayTime !== undefined) {
-					_startTime = time + _repeatDelayTime;
-				} else {
-					_startTime = time + _delayTime;
-				}
-
-				return true;
-
-			} else {
-
-				if (_onCompleteCallback !== null) {
-
-					_onCompleteCallback.call(_object, _object);
-				}
-
-				for (var i = 0, numChainedTweens = _chainedTweens.length; i < numChainedTweens; i++) {
-					// Make the chained tweens start exactly at the time they should,
-					// even if the `update()` method was called way past the duration of the tween
-					_chainedTweens[i].start(_startTime + _duration);
-				}
-
-				return false;
-
-			}
-
-		}
-
-		return true;
-
-	};
-
-};
-
-
-TWEEN.Easing = {
-
-	Linear: {
-
-		None: function (k) {
-
-			return k;
-
-		}
-
-	},
-
-	Quadratic: {
-
-		In: function (k) {
-
-			return k * k;
-
-		},
-
-		Out: function (k) {
-
-			return k * (2 - k);
-
-		},
-
-		InOut: function (k) {
-
-			if ((k *= 2) < 1) {
-				return 0.5 * k * k;
-			}
-
-			return - 0.5 * (--k * (k - 2) - 1);
-
-		}
-
-	},
-
-	Cubic: {
-
-		In: function (k) {
-
-			return k * k * k;
-
-		},
-
-		Out: function (k) {
-
-			return --k * k * k + 1;
-
-		},
-
-		InOut: function (k) {
-
-			if ((k *= 2) < 1) {
-				return 0.5 * k * k * k;
-			}
-
-			return 0.5 * ((k -= 2) * k * k + 2);
-
-		}
-
-	},
-
-	Quartic: {
-
-		In: function (k) {
-
-			return k * k * k * k;
-
-		},
-
-		Out: function (k) {
-
-			return 1 - (--k * k * k * k);
-
-		},
-
-		InOut: function (k) {
-
-			if ((k *= 2) < 1) {
-				return 0.5 * k * k * k * k;
-			}
-
-			return - 0.5 * ((k -= 2) * k * k * k - 2);
-
-		}
-
-	},
-
-	Quintic: {
-
-		In: function (k) {
-
-			return k * k * k * k * k;
-
-		},
-
-		Out: function (k) {
-
-			return --k * k * k * k * k + 1;
-
-		},
-
-		InOut: function (k) {
-
-			if ((k *= 2) < 1) {
-				return 0.5 * k * k * k * k * k;
-			}
-
-			return 0.5 * ((k -= 2) * k * k * k * k + 2);
-
-		}
-
-	},
-
-	Sinusoidal: {
-
-		In: function (k) {
-
-			return 1 - Math.cos(k * Math.PI / 2);
-
-		},
-
-		Out: function (k) {
-
-			return Math.sin(k * Math.PI / 2);
-
-		},
-
-		InOut: function (k) {
-
-			return 0.5 * (1 - Math.cos(Math.PI * k));
-
-		}
-
-	},
-
-	Exponential: {
-
-		In: function (k) {
-
-			return k === 0 ? 0 : Math.pow(1024, k - 1);
-
-		},
-
-		Out: function (k) {
-
-			return k === 1 ? 1 : 1 - Math.pow(2, - 10 * k);
-
-		},
-
-		InOut: function (k) {
-
-			if (k === 0) {
-				return 0;
-			}
-
-			if (k === 1) {
-				return 1;
-			}
-
-			if ((k *= 2) < 1) {
-				return 0.5 * Math.pow(1024, k - 1);
-			}
-
-			return 0.5 * (- Math.pow(2, - 10 * (k - 1)) + 2);
-
-		}
-
-	},
-
-	Circular: {
-
-		In: function (k) {
-
-			return 1 - Math.sqrt(1 - k * k);
-
-		},
-
-		Out: function (k) {
-
-			return Math.sqrt(1 - (--k * k));
-
-		},
-
-		InOut: function (k) {
-
-			if ((k *= 2) < 1) {
-				return - 0.5 * (Math.sqrt(1 - k * k) - 1);
-			}
-
-			return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
-
-		}
-
-	},
-
-	Elastic: {
-
-		In: function (k) {
-
-			if (k === 0) {
-				return 0;
-			}
-
-			if (k === 1) {
-				return 1;
-			}
-
-			return -Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
-
-		},
-
-		Out: function (k) {
-
-			if (k === 0) {
-				return 0;
-			}
-
-			if (k === 1) {
-				return 1;
-			}
-
-			return Math.pow(2, -10 * k) * Math.sin((k - 0.1) * 5 * Math.PI) + 1;
-
-		},
-
-		InOut: function (k) {
-
-			if (k === 0) {
-				return 0;
-			}
-
-			if (k === 1) {
-				return 1;
-			}
-
-			k *= 2;
-
-			if (k < 1) {
-				return -0.5 * Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
-			}
-
-			return 0.5 * Math.pow(2, -10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI) + 1;
-
-		}
-
-	},
-
-	Back: {
-
-		In: function (k) {
-
-			var s = 1.70158;
-
-			return k * k * ((s + 1) * k - s);
-
-		},
-
-		Out: function (k) {
-
-			var s = 1.70158;
-
-			return --k * k * ((s + 1) * k + s) + 1;
-
-		},
-
-		InOut: function (k) {
-
-			var s = 1.70158 * 1.525;
-
-			if ((k *= 2) < 1) {
-				return 0.5 * (k * k * ((s + 1) * k - s));
-			}
-
-			return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
-
-		}
-
-	},
-
-	Bounce: {
-
-		In: function (k) {
-
-			return 1 - TWEEN.Easing.Bounce.Out(1 - k);
-
-		},
-
-		Out: function (k) {
-
-			if (k < (1 / 2.75)) {
-				return 7.5625 * k * k;
-			} else if (k < (2 / 2.75)) {
-				return 7.5625 * (k -= (1.5 / 2.75)) * k + 0.75;
-			} else if (k < (2.5 / 2.75)) {
-				return 7.5625 * (k -= (2.25 / 2.75)) * k + 0.9375;
-			} else {
-				return 7.5625 * (k -= (2.625 / 2.75)) * k + 0.984375;
-			}
-
-		},
-
-		InOut: function (k) {
-
-			if (k < 0.5) {
-				return TWEEN.Easing.Bounce.In(k * 2) * 0.5;
-			}
-
-			return TWEEN.Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
-
-		}
-
-	}
-
-};
-
-TWEEN.Interpolation = {
-
-	Linear: function (v, k) {
-
-		var m = v.length - 1;
-		var f = m * k;
-		var i = Math.floor(f);
-		var fn = TWEEN.Interpolation.Utils.Linear;
-
-		if (k < 0) {
-			return fn(v[0], v[1], f);
-		}
-
-		if (k > 1) {
-			return fn(v[m], v[m - 1], m - f);
-		}
-
-		return fn(v[i], v[i + 1 > m ? m : i + 1], f - i);
-
-	},
-
-	Bezier: function (v, k) {
-
-		var b = 0;
-		var n = v.length - 1;
-		var pw = Math.pow;
-		var bn = TWEEN.Interpolation.Utils.Bernstein;
-
-		for (var i = 0; i <= n; i++) {
-			b += pw(1 - k, n - i) * pw(k, i) * v[i] * bn(n, i);
-		}
-
-		return b;
-
-	},
-
-	CatmullRom: function (v, k) {
-
-		var m = v.length - 1;
-		var f = m * k;
-		var i = Math.floor(f);
-		var fn = TWEEN.Interpolation.Utils.CatmullRom;
-
-		if (v[0] === v[m]) {
-
-			if (k < 0) {
-				i = Math.floor(f = m * (1 + k));
-			}
-
-			return fn(v[(i - 1 + m) % m], v[i], v[(i + 1) % m], v[(i + 2) % m], f - i);
-
-		} else {
-
-			if (k < 0) {
-				return v[0] - (fn(v[0], v[0], v[1], v[1], -f) - v[0]);
-			}
-
-			if (k > 1) {
-				return v[m] - (fn(v[m], v[m], v[m - 1], v[m - 1], f - m) - v[m]);
-			}
-
-			return fn(v[i ? i - 1 : 0], v[i], v[m < i + 1 ? m : i + 1], v[m < i + 2 ? m : i + 2], f - i);
-
-		}
-
-	},
-
-	Utils: {
-
-		Linear: function (p0, p1, t) {
-
-			return (p1 - p0) * t + p0;
-
-		},
-
-		Bernstein: function (n, i) {
-
-			var fc = TWEEN.Interpolation.Utils.Factorial;
-
-			return fc(n) / fc(i) / fc(n - i);
-
-		},
-
-		Factorial: (function () {
-
-			var a = [1];
-
-			return function (n) {
-
-				var s = 1;
-
-				if (a[n]) {
-					return a[n];
-				}
-
-				for (var i = n; i > 1; i--) {
-					s *= i;
-				}
-
-				a[n] = s;
-				return s;
-
-			};
-
-		})(),
-
-		CatmullRom: function (p0, p1, p2, p3, t) {
-
-			var v0 = (p2 - p0) * 0.5;
-			var v1 = (p3 - p1) * 0.5;
-			var t2 = t * t;
-			var t3 = t * t2;
-
-			return (2 * p1 - 2 * p2 + v0 + v1) * t3 + (- 3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 + v0 * t + p1;
-
-		}
-
-	}
-
-};
-
-// UMD (Universal Module Definition)
-(function (root) {
-
-	if (typeof define === 'function' && define.amd) {
-
-		// AMD
-		define([], function () {
-			return TWEEN;
-		});
-
-	} else if (typeof module !== 'undefined' && typeof exports === 'object') {
-
-		// Node.js
-		module.exports = TWEEN;
-
-	} else if (root !== undefined) {
-
-		// Global variable
-		root.TWEEN = TWEEN;
-
-	}
-
-})(this);
-
-}).call(this,require('_process'))
-
-},{"_process":1}],6:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -45411,9 +44342,9 @@ var _three = require('three');
 
 var THREE = _interopRequireWildcard(_three);
 
-var _tween = require('tween.js');
+var _scenographer = require('./scenographer');
 
-var _tween2 = _interopRequireDefault(_tween);
+var _scenographer2 = _interopRequireDefault(_scenographer);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -45428,59 +44359,60 @@ var Actor = function () {
         var geometry = new THREE.BoxGeometry(1, 1, 1);
         var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         this.mesh = new THREE.Mesh(geometry, material);
-        this.currentAnimationIndex = 0;
+        this.durationRotation = 3000;
+        this.scenographer = new _scenographer2.default();
+        this.durationStep = 3000;
+        this.animating = false;
+        // probably these should go in a timeline class
+        this.currentCommandIndex = 0;
+        this.commandStartedAt = 0;
     }
 
     _createClass(Actor, [{
-        key: 'consume',
-        value: function consume(instructions) {
-            var _this = this;
-
-            // how to stop chains
-            // put some guards here https://github.com/tweenjs/tween.js/issues/75
-            // how to stop https://github.com/tweenjs/tween.js/pull/95/commits/d8b2deb02c2d6fad9b7fdb5a9511669ef86d07dd
-            var tweens = this._buildTweensChain(instructions);
-            if (tweens.length > 0) {
-                tweens[0].start().onComplete(function () {
-                    //debugger;
-                    if (_this.currentAnimationIndex < tweens.length + 1) {
-                        _this.currentAnimationIndex++;
-                        tweens[_this.currentAnimationIndex].start();
-                    }
-                });
+        key: 'getStepDuration',
+        value: function getStepDuration() {
+            return this.durationStep;
+        }
+    }, {
+        key: 'getRotationDuration',
+        value: function getRotationDuration() {
+            return this.durationRotation;
+        }
+    }, {
+        key: 'startConsume',
+        value: function startConsume(instructions) {
+            if (instructions.length > 0 && !this.animating) {
+                this.scenographer.setScenes(instructions);
+                this.animating = true;
+            } else if (this.animating) {
+                console.log("instructions are already being executed");
             } else {
                 console.log("no instructions to execute");
             }
         }
     }, {
-        key: '_buildTweensChain',
-        value: function _buildTweensChain(instructions) {
-            var _this2 = this;
+        key: '_consumeCommands',
+        value: function _consumeCommands(time) {
+            if (!this.animating || !this.scenographer.scenesAreAvailable()) return;
 
-            var tweens = [];
-            instructions.forEach(function (command) {
-                var key = command["type"];
-                var val = command["value"];
-                switch (key) {
-                    case "move_forward":
-                        tweens.push(_this2._moveForwardTween(val));
-                        break;
-                    case "turn_right":
-                        tweens.push(_this2._turnRightTween(val));
-                        break;
-                    default:
-                        console.log("action " + key + " not implemented");
-                        break;
-                }
-                console.log(command);
-            });
-            // for(let i = 0; i< tweens.length; i++){
-            //     if(i!= tweens.length-1){
-            //         tweens[i].chain(tweens[i+1]);  
-            //     }
-            // }
-            //console.log(tweens);
-            return tweens;
+            var currentScene = this.scenographer.getCurrentScene();
+            var key = currentScene["type"];
+            var val = currentScene["value"];
+            var duration = currentScene["duration"];
+            var progress = 0;
+            switch (key) {
+                case "move_forward":
+                    this.mesh.translateZ(val / 60);
+                    //tweens.push(this._moveForwardTween(val));
+                    break;
+                case "turn_right":
+                    this.mesh.rotation.y += 0.001;
+                    //tweens.push(this._turnRightTween(val));
+                    break;
+                default:
+                    console.log("action " + key + " not implemented");
+                    break;
+            }
         }
     }, {
         key: 'getMesh',
@@ -45491,7 +44423,7 @@ var Actor = function () {
         key: 'reset',
         value: function reset() {
             this.mesh.position.set(new THREE.Vector3(0.0, 0.0, 0.0));
-            this.mesh.currentAnimationIndex = 0;
+            this.scenographer.resetScenes();
             this.mesh.rotation.set(0.0, 0.0, 0.0);
         }
     }, {
@@ -45505,99 +44437,10 @@ var Actor = function () {
             this.mesh.rotation.y += rotationDeg;
         }
     }, {
-        key: 'testChained',
-        value: function testChained() {
-            var _this3 = this;
-
-            var radians = 90 * THREE.Math.DEG2RAD;
-
-            var pos_copy_a = new THREE.Vector3().copy(this.mesh.position);
-            var target_a = pos_copy_a.add(new THREE.Vector3(0.0, 0.0, 0.8));
-            var rotationMatrix_a = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
-            target_a.applyMatrix4(rotationMatrix_a);
-            var a = new _tween2.default.Tween(this.mesh.position).to(target_a, 300).onComplete(function () {
-                console.log("animation a");
-                console.log(_this3.mesh.position);
-                console.log(_this3.mesh.rotation);
-            }).onUpdate(function () {
-                _this3.mesh.position.set(target_a);
-            });
-
-            var target_b = { y: this.mesh.rotation.y + radians };
-            var b = new _tween2.default.Tween(this.mesh.rotation).to(target_b, 300).onComplete(function () {
-                console.log("animation b");
-                //console.log(this.mesh.position);
-                //console.log(this.mesh.rotation);  
-            }).onUpdate(function () {
-                _this3.mesh.rotation.set(target_b);
-            });
-
-            var pos_copy_c = new THREE.Vector3().copy(this.mesh.position);
-            var target_c = pos_copy_c.add(new THREE.Vector3(0.0, 0.0, 2.8));
-            var rotationMatrix_c = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
-            target_c.applyMatrix4(rotationMatrix_c);
-
-            var c = new _tween2.default.Tween(this.mesh.position).to(target_c, 300).onComplete(function () {
-                console.log("animation c");
-                console.log(target_c);
-                console.log(_this3.mesh.position);
-                console.log(_this3.mesh.rotation);
-            }).onUpdate(function () {
-                _this3.mesh.position.set(target_c);
-            });
-            a.chain(b);
-            b.chain(c);
-            a.start();
-        }
-    }, {
-        key: '_moveForwardTween',
-        value: function _moveForwardTween(_length) {
-            var length = Number(_length);
-            var rotationMatrix_c = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
-            var distance = new THREE.Vector3(0.0, 0.0, length / 10);
-            distance.applyMatrix4(rotationMatrix_c);
-            var target = {
-                x: String(distance.x),
-                y: String(distance.y),
-                z: String(distance.z)
-            };
-            console.log(target);
-            var tween = new _tween2.default.Tween(this.mesh.position).to(target, 300);
-            return tween;
-        }
-
-        // Rotation and tweenjs http://stackoverflow.com/questions/9094971/threejs-rotation-animation
-
-    }, {
-        key: '_turnRightTween',
-        value: function _turnRightTween(_degree) {
-            var radians = Number(_degree) * THREE.Math.DEG2RAD;
-            var radiansToString = String("+" + radians);
-            var target = { y: radiansToString };
-            var tween = new _tween2.default.Tween(this.mesh.rotation).to(target, 300);
-            return tween;
-        }
-    }, {
-        key: 'animationMove',
-        value: function animationMove(length) {
-            //let pos = this.mesh.position;
-            var tween = this._moveForwardTween(length);
-            tween.start();
-        }
-    }, {
-        key: 'animationTurnRight',
-        value: function animationTurnRight(deg) {
-            console.log(deg);
-        }
-    }, {
-        key: 'animationTurnLeft',
-        value: function animationTurnLeft(deg) {
-            console.log(deg);
-        }
-    }, {
         key: 'update',
         value: function update(time) {
-            _tween2.default.update(time);
+            this.scenographer.update(time);
+            this._consumeCommands(time);
         }
     }]);
 
@@ -45606,7 +44449,7 @@ var Actor = function () {
 
 exports.default = Actor;
 
-},{"three":4,"tween.js":5}],7:[function(require,module,exports){
+},{"./scenographer":8,"three":3}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -45629,7 +44472,7 @@ var Commander = function Commander(instruction) {
 
 exports.default = Commander;
 
-},{"three":4}],8:[function(require,module,exports){
+},{"three":3}],6:[function(require,module,exports){
 'use strict';
 
 var _three = require('three');
@@ -45666,9 +44509,11 @@ var actor = void 0,
     camera = void 0,
     canvas = void 0,
     stats = void 0,
-    controls = void 0;
+    controls = void 0,
+    clock = void 0;
 
 function initGame() {
+	clock = new THREE.Clock();
 	var halfScreenWidth = window.innerWidth / 2;
 	var halfScreenHeight = window.innerHeight / 2;
 
@@ -45703,21 +44548,33 @@ function initGame() {
 	window.Blockly.JavaScript['actor_move_forward'] = function (block) {
 		var dropdown_actor_move_forward_distance = block.getFieldValue('actor_move_forward_distance');
 		//actor.animationMove(dropdown_actor_move_forward_distance);
-		instructions.push({ "type": "move_forward", "value": dropdown_actor_move_forward_distance });
+		instructions.push({
+			"type": "move_forward",
+			"value": dropdown_actor_move_forward_distance,
+			"duration": actor.getStepDuration() * dropdown_actor_move_forward_distance
+		});
 		var code = "console.log('move forward');";
 		return code;
 	};
 
 	window.Blockly.JavaScript['actor_turn_right'] = function (block) {
 		var angle_actor_turn_right_value = block.getFieldValue('actor_turn_right_value');
-		instructions.push({ "type": "turn_right", "value": angle_actor_turn_right_value });
+		instructions.push({
+			"type": "turn_right",
+			"value": angle_actor_turn_right_value,
+			"duration": actor.getRotationDuration()
+		});
 		var code = "console.log('actor_turn_right');";
 		return code;
 	};
 
 	window.Blockly.JavaScript['actor_turn_left'] = function (block) {
 		var angle_actor_turn_left_value = block.getFieldValue('actor_turn_left_value');
-		instructions.push({ "type": "turn_left", "value": angle_actor_turn_left_value });
+		instructions.push({
+			"type": "turn_left",
+			"value": angle_actor_turn_left_value,
+			"duration": actor.getRotationDuration()
+		});
 		var code = "console.log('actor_turn_left');";
 		return code;
 	};
@@ -45728,8 +44585,10 @@ function initGame() {
 	};
 }
 
-function animate(time) {
+function animate() {
 	stats.begin();
+	var delta = clock.getDelta();
+	var time = clock.getElapsedTime();
 	actor.update(time);
 	render();
 	controls.update;
@@ -45758,11 +44617,11 @@ window.run_code = function () {
 	instructions = [];
 	var code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
 	eval(code);
-	actor.consume(instructions);
+	actor.startConsume(instructions);
 	//actor.testChained();
 };
 
-},{"./actor":6,"./commander":7,"./plane":9,"stats.js":2,"three":4,"three-orbit-controls":3}],9:[function(require,module,exports){
+},{"./actor":4,"./commander":5,"./plane":7,"stats.js":1,"three":3,"three-orbit-controls":2}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -45805,6 +44664,81 @@ var Plane = function () {
 
 exports.default = Plane;
 
-},{"three":4}]},{},[8])
+},{"three":3}],8:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _three = require("three");
+
+var THREE = _interopRequireWildcard(_three);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Scenographer = function () {
+	function Scenographer() {
+		_classCallCheck(this, Scenographer);
+	}
+
+	_createClass(Scenographer, [{
+		key: "contructor",
+		value: function contructor() {
+			this.currentSceneIndex = 0;
+		}
+	}, {
+		key: "setScenes",
+		value: function setScenes(scenes) {
+			this.scenes = scenes;
+		}
+	}, {
+		key: "update",
+		value: function update(time) {
+			if (!this.scenesAreAvailable()) return;
+			console.log("startd");
+			console.log(time);
+			//debugger;
+		}
+	}, {
+		key: "scenesAreAvailable",
+		value: function scenesAreAvailable() {
+			return this.scenes && this.scenes.length > 0;
+		}
+	}, {
+		key: "getCurrentScene",
+		value: function getCurrentScene() {
+			console.log(this);
+			return this.scenes[this.currentSceneIndex];
+		}
+	}, {
+		key: "resetScenes",
+		value: function resetScenes() {
+			this.scenes = [];
+			this.currentSceneIndex = 0;
+		}
+	}, {
+		key: "_changeAnimation",
+		value: function _changeAnimation() {
+			console.log("change");
+			if (this.currentCommandIndex < this.commands.length - 1) {
+				this.currentCommandIndex++;
+			} else {
+				console.log("all animations were executed");
+				this.animating = false;
+			}
+		}
+	}]);
+
+	return Scenographer;
+}();
+
+exports.default = Scenographer;
+
+},{"three":3}]},{},[6])
 
 //# sourceMappingURL=build.js.map
