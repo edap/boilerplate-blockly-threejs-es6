@@ -45428,17 +45428,26 @@ var Actor = function () {
         var geometry = new THREE.BoxGeometry(1, 1, 1);
         var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         this.mesh = new THREE.Mesh(geometry, material);
+        this.currentAnimationIndex = 0;
     }
 
     _createClass(Actor, [{
         key: 'consume',
         value: function consume(instructions) {
+            var _this = this;
+
             // how to stop chains
             // put some guards here https://github.com/tweenjs/tween.js/issues/75
             // how to stop https://github.com/tweenjs/tween.js/pull/95/commits/d8b2deb02c2d6fad9b7fdb5a9511669ef86d07dd
             var tweens = this._buildTweensChain(instructions);
             if (tweens.length > 0) {
-                tweens[0].start();
+                tweens[0].start().onComplete(function () {
+                    //debugger;
+                    if (_this.currentAnimationIndex < tweens.length) {
+                        _this.currentAnimationIndex++;
+                        tweens[_this.currentAnimationIndex].start();
+                    }
+                });
             } else {
                 console.log("no instructions to execute");
             }
@@ -45446,7 +45455,7 @@ var Actor = function () {
     }, {
         key: '_buildTweensChain',
         value: function _buildTweensChain(instructions) {
-            var _this = this;
+            var _this2 = this;
 
             var tweens = [];
             instructions.forEach(function (command) {
@@ -45454,10 +45463,10 @@ var Actor = function () {
                 var val = command["value"];
                 switch (key) {
                     case "move_forward":
-                        tweens.push(_this._moveForwardTween(val));
+                        tweens.push(_this2._moveForwardTween(val));
                         break;
                     case "turn_right":
-                        tweens.push(_this._turnRightTween(val));
+                        tweens.push(_this2._turnRightTween(val));
                         break;
                     default:
                         console.log("action " + key + " not implemented");
@@ -45465,18 +45474,25 @@ var Actor = function () {
                 }
                 console.log(command);
             });
-            for (var i = 0; i < tweens.length; i++) {
-                if (i != tweens.length - 1) {
-                    tweens[i].chain(tweens[i + 1]);
-                }
-            }
-            console.log(tweens);
+            // for(let i = 0; i< tweens.length; i++){
+            //     if(i!= tweens.length-1){
+            //         tweens[i].chain(tweens[i+1]);  
+            //     }
+            // }
+            //console.log(tweens);
             return tweens;
         }
     }, {
         key: 'getMesh',
         value: function getMesh() {
             return this.mesh;
+        }
+    }, {
+        key: 'reset',
+        value: function reset() {
+            this.mesh.position.set(new THREE.Vector3(0.0, 0.0, 0.0));
+            this.mesh.currentAnimationIndex = 0;
+            this.mesh.rotation.set(0.0, 0.0, 0.0);
         }
     }, {
         key: 'rotateX',
@@ -45491,7 +45507,7 @@ var Actor = function () {
     }, {
         key: 'testChained',
         value: function testChained() {
-            var _this2 = this;
+            var _this3 = this;
 
             var radians = 90 * THREE.Math.DEG2RAD;
 
@@ -45501,28 +45517,33 @@ var Actor = function () {
             target_a.applyMatrix4(rotationMatrix_a);
             var a = new _tween2.default.Tween(this.mesh.position).to(target_a, 300).onComplete(function () {
                 console.log("animation a");
-                console.log(_this2.mesh.position);
-                console.log(_this2.mesh.rotation);
-                _this2.mesh.updateMatrix();
+                console.log(_this3.mesh.position);
+                console.log(_this3.mesh.rotation);
+            }).onUpdate(function () {
+                _this3.mesh.position.set(target_a);
             });
 
             var target_b = { y: this.mesh.rotation.y + radians };
             var b = new _tween2.default.Tween(this.mesh.rotation).to(target_b, 300).onComplete(function () {
                 console.log("animation b");
-                console.log(_this2.mesh.position);
-                console.log(_this2.mesh.rotation);
-                _this2.mesh.updateMatrix();
-            });;
+                //console.log(this.mesh.position);
+                //console.log(this.mesh.rotation);  
+            }).onUpdate(function () {
+                _this3.mesh.rotation.set(target_b);
+            });
 
             var pos_copy_c = new THREE.Vector3().copy(this.mesh.position);
-            var target_c = pos_copy_c.add(new THREE.Vector3(0.0, 0.0, 0.8));
+            var target_c = pos_copy_c.add(new THREE.Vector3(0.0, 0.0, 2.8));
             var rotationMatrix_c = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
             target_c.applyMatrix4(rotationMatrix_c);
+
             var c = new _tween2.default.Tween(this.mesh.position).to(target_c, 300).onComplete(function () {
                 console.log("animation c");
-                console.log(_this2.mesh.position);
-                console.log(_this2.mesh.rotation);
-                _this2.mesh.updateMatrix();
+                console.log(target_c);
+                console.log(_this3.mesh.position);
+                console.log(_this3.mesh.rotation);
+            }).onUpdate(function () {
+                _this3.mesh.position.set(target_c);
             });
             a.chain(b);
             b.chain(c);
@@ -45532,10 +45553,10 @@ var Actor = function () {
         key: '_moveForwardTween',
         value: function _moveForwardTween(_length) {
             var length = Number(_length);
-            var pos = new THREE.Vector3().copy(this.mesh.position);
-            var target = pos.add(new THREE.Vector3(0.0, 0.0, length / 10));
-            var rotationMatrix = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
-            target.applyMatrix4(rotationMatrix);
+            var pos = { z: 0 };
+            var target = { z: length / 10 };
+            console.log(pos);
+            console.log(target);
             var tween = new _tween2.default.Tween(this.mesh.position).to(target, 300);
             return tween;
         }
@@ -45546,7 +45567,8 @@ var Actor = function () {
         key: '_turnRightTween',
         value: function _turnRightTween(_degree) {
             var radians = Number(_degree) * THREE.Math.DEG2RAD;
-            var target = { y: this.mesh.rotation.y + radians };
+            var bla = String("+" + radians);
+            var target = { y: bla };
             var tween = new _tween2.default.Tween(this.mesh.rotation).to(target, 300);
             return tween;
         }
@@ -45725,16 +45747,18 @@ window.blockly_loaded = function (blockly) {
 	initGame();
 };
 
+window.reset_car = function () {
+	actor.reset();
+};
+
 window.run_code = function () {
 	//reset instructions if the player did not complete everything
 	// probably you should reset the position too
 	instructions = [];
 	var code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
-	console.log(instructions);
 	eval(code);
-	console.log();
 	actor.consume(instructions);
-	actor.testChained();
+	//actor.testChained();
 };
 
 },{"./actor":6,"./commander":7,"./plane":9,"stats.js":2,"three":4,"three-orbit-controls":3,"tween.js":5}],9:[function(require,module,exports){

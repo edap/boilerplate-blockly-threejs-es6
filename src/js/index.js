@@ -90,16 +90,18 @@ window.blockly_loaded = function(blockly) {
 	initGame();
 }
 
+window.reset_car = function() {
+	actor.reset();
+}
+
 window.run_code = function() {
 	//reset instructions if the player did not complete everything
 	// probably you should reset the position too
 	instructions=[];
 	var code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
-	console.log(instructions);
 	eval(code);
-	console.log();
 	actor.consume(instructions);
-	actor.testChained();
+	//actor.testChained();
 }
 
 
