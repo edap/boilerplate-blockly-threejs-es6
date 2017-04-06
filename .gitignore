@@ -1,4 +1,6 @@
 node_modules
+build/build.js
+build/build.js.map
 # Logs
 logs
 *.log
