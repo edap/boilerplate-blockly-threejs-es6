@@ -6,8 +6,9 @@ import Plane from "./plane";
 import Commander from "./commander";
 
 const debug = true;
+const OrbitControls = require('three-orbit-controls')(THREE);
 let instructions = [];
-let actor, plane, renderer, scene, camera, canvas, stats;
+let actor, plane, renderer, scene, camera, canvas, stats, controls;
 
 function initGame(){
 	let halfScreenWidth = window.innerWidth/2;
@@ -19,6 +20,8 @@ function initGame(){
 	renderer = new THREE.WebGLRenderer({antialias:true});
 	renderer.setSize(halfScreenWidth, halfScreenHeight);
 	canvas.appendChild(renderer.domElement);
+	controls = new OrbitControls(camera, renderer.domElement);
+
     plane = new Plane();
     plane.rotateX(-Math.PI/2);
     actor = new Actor();
@@ -34,6 +37,8 @@ function initGame(){
 	if (debug) {
         canvas.appendChild(stats.domElement);
     }
+    var axes = new THREE.AxisHelper(2);
+    scene.add(axes);
 
 	animate();
 
@@ -69,6 +74,7 @@ function animate(time) {
 	stats.begin();
 	actor.update(time)
 	render();
+	controls.update;
 	//console.log(actor.getMesh().position)
     stats.end();
     requestAnimationFrame( animate );
@@ -93,6 +99,7 @@ window.run_code = function() {
 	eval(code);
 	console.log();
 	actor.consume(instructions);
+	actor.testChained();
 }
 
 

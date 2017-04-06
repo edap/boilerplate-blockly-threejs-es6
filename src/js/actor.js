@@ -24,7 +24,6 @@ export default class Actor {
         instructions.forEach((command)=>{
             let key = command["type"];
             let val = command["value"];
-            debugger;
             switch(key){
                 case "move_forward":
                     tweens.push(this._moveForwardTween(val));
@@ -43,6 +42,7 @@ export default class Actor {
                 tweens[i].chain(tweens[i+1]);  
             }
         }
+        console.log(tweens);
         return tweens;   
 
     }
@@ -59,23 +59,59 @@ export default class Actor {
         this.mesh.rotation.y += rotationDeg;
     }
 
+    testChained(){
+        let radians = 90 * THREE.Math.DEG2RAD;
+
+        let pos_copy_a = new THREE.Vector3().copy(this.mesh.position);
+        let target_a = pos_copy_a.add(new THREE.Vector3(0.0, 0.0, 0.8));
+        let rotationMatrix_a = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
+        target_a.applyMatrix4(rotationMatrix_a);
+        let a = new TWEEN.Tween(this.mesh.position).to(target_a, 300).onComplete(()=>{
+            console.log("animation a");
+            console.log(this.mesh.position);
+            console.log(this.mesh.rotation);
+            this.mesh.updateMatrix();
+        });
+
+        let target_b = {y:this.mesh.rotation.y + radians};
+        let b = new TWEEN.Tween(this.mesh.rotation).to(target_b, 300).onComplete(()=>{
+            console.log("animation b");
+            console.log(this.mesh.position);
+            console.log(this.mesh.rotation);
+            this.mesh.updateMatrix();   
+        });;
+
+        let pos_copy_c = new THREE.Vector3().copy(this.mesh.position);
+        let target_c = pos_copy_c.add(new THREE.Vector3(0.0, 0.0, 0.8));
+        let rotationMatrix_c = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
+        target_c.applyMatrix4(rotationMatrix_c);
+        let c = new TWEEN.Tween(this.mesh.position).to(target_c, 300)
+        .onComplete(()=>{
+            console.log("animation c");
+            console.log(this.mesh.position);
+            console.log(this.mesh.rotation);
+            this.mesh.updateMatrix();
+        });
+        a.chain(b);
+        b.chain(c);
+        a.start();
+    }
+
     _moveForwardTween(_length){
         let length = Number(_length);
-        let pos = this.mesh.position;
-        let target = new THREE.Vector3(0.0, 0.0, length/10);
+        let pos = new THREE.Vector3().copy(this.mesh.position);
+        let target = pos.add(new THREE.Vector3(0.0, 0.0, length/10));
         let rotationMatrix = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
         target.applyMatrix4(rotationMatrix);
-        let tween = new TWEEN.Tween(pos).to(target, 300);
+        let tween = new TWEEN.Tween(this.mesh.position).to(target, 300);
         return tween;
     }
 
-    _turnRightTween(_length){
-        let length = Number(_length);
-        let pos = this.mesh.position;
-        let target = new THREE.Vector3(0.0, 0.0, length/10);
-        let rotationMatrix = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
-        target.applyMatrix4(rotationMatrix);
-        let tween = new TWEEN.Tween(pos).to(target, 300);
+    // Rotation and tweenjs http://stackoverflow.com/questions/9094971/threejs-rotation-animation
+    _turnRightTween(_degree){
+        let radians = Number(_degree) * THREE.Math.DEG2RAD;
+        let target = {y:this.mesh.rotation.y + radians};
+        let tween = new TWEEN.Tween(this.mesh.rotation).to(target, 300);
         return tween;
     }
 
