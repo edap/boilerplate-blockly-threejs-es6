@@ -44359,10 +44359,10 @@ var Actor = function () {
         var geometry = new THREE.BoxGeometry(1, 1, 1);
         var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         this.mesh = new THREE.Mesh(geometry, material);
-        this.durationRotation = 3000;
+        this.mesh.rotateY(Math.PI);
+        this.durationRotation = 3000; //ms
         this.scenographer = new _scenographer2.default();
-        this.durationStep = 3000;
-        this.animating = false;
+        this.durationStep = 3000; //ms
         // probably these should go in a timeline class
         this.currentCommandIndex = 0;
         this.commandStartedAt = 0;
@@ -44381,10 +44381,10 @@ var Actor = function () {
     }, {
         key: 'startConsume',
         value: function startConsume(instructions) {
-            if (instructions.length > 0 && !this.animating) {
+            if (instructions.length > 0 && !this.scenographer.animating) {
                 this.scenographer.setScenes(instructions);
-                this.animating = true;
-            } else if (this.animating) {
+                this.scenographer.animating = true;
+            } else if (this.scenographer.animating) {
                 console.log("instructions are already being executed");
             } else {
                 console.log("no instructions to execute");
@@ -44393,7 +44393,7 @@ var Actor = function () {
     }, {
         key: '_consumeCommands',
         value: function _consumeCommands(time) {
-            if (!this.animating || !this.scenographer.scenesAreAvailable()) return;
+            if (!this.scenographer.animating || !this.scenographer.scenesAreAvailable()) return;
 
             var currentScene = this.scenographer.getCurrentScene();
             var key = currentScene["type"];
@@ -44402,11 +44402,23 @@ var Actor = function () {
             var progress = 0;
             switch (key) {
                 case "move_forward":
-                    this.mesh.translateZ(val / 60);
+                    // let copy_pos = new THREE.Vector3().copy(this.mesh.position);
+                    // let target = copy_pos.add(new THREE.Vector3(0.0, 0.0, val/40));
+                    // let rotationMatrix = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
+                    // target.applyMatrix4(rotationMatrix);
+                    // console.log(this.mesh.position);
+                    // this.mesh.position.set(target);
+                    // console.log(this.mesh.position);
                     //tweens.push(this._moveForwardTween(val));
+
+                    this.mesh.translateZ(0.01);
                     break;
                 case "turn_right":
-                    this.mesh.rotation.y += 0.001;
+                    this.mesh.rotateY(-0.01);
+                    //tweens.push(this._turnRightTween(val));
+                    break;
+                case "turn_left":
+                    this.mesh.rotateY(+0.01);
                     //tweens.push(this._turnRightTween(val));
                     break;
                 default:
@@ -44427,20 +44439,10 @@ var Actor = function () {
             this.mesh.rotation.set(0.0, 0.0, 0.0);
         }
     }, {
-        key: 'rotateX',
-        value: function rotateX(rotationDeg) {
-            this.mesh.rotation.x += rotationDeg;
-        }
-    }, {
-        key: 'rotateY',
-        value: function rotateY(rotationDeg) {
-            this.mesh.rotation.y += rotationDeg;
-        }
-    }, {
         key: 'update',
         value: function update(time) {
-            this.scenographer.update(time);
-            this._consumeCommands(time);
+            this.scenographer.update(time * 1000);
+            this._consumeCommands(time * 1000);
         }
     }]);
 
@@ -44688,21 +44690,38 @@ var Scenographer = function () {
 
 	_createClass(Scenographer, [{
 		key: "contructor",
-		value: function contructor() {
-			this.currentSceneIndex = 0;
-		}
+		value: function contructor() {}
 	}, {
 		key: "setScenes",
 		value: function setScenes(scenes) {
+			this.currentSceneIndex = 0;
 			this.scenes = scenes;
+			this.startedAt = 0;
+			this.timeElapsed = 0;
+			this.animating = false;
 		}
 	}, {
 		key: "update",
 		value: function update(time) {
 			if (!this.scenesAreAvailable()) return;
-			console.log("startd");
-			console.log(time);
-			//debugger;
+			if (this.startedAt === 0) {
+				this.startedAt = time;
+			};
+			this.timeElapsed = time - this.startedAt;
+			if (this.timeElapsed >= this.getCurrentScene().duration) {
+				this._changeScene(time);
+			}
+			//console.log(this.timeElapsed);
+		}
+	}, {
+		key: "_changeScene",
+		value: function _changeScene(time) {
+			this.startedAt = time;
+			if (this.currentSceneIndex < this.scenes.length - 1) {
+				this.currentSceneIndex++;
+			} else {
+				this.animating = false;
+			}
 		}
 	}, {
 		key: "scenesAreAvailable",
@@ -44712,14 +44731,16 @@ var Scenographer = function () {
 	}, {
 		key: "getCurrentScene",
 		value: function getCurrentScene() {
-			console.log(this);
 			return this.scenes[this.currentSceneIndex];
 		}
 	}, {
 		key: "resetScenes",
 		value: function resetScenes() {
 			this.scenes = [];
+			this.startedAt = 0;
+			this.timeElapsed = 0;
 			this.currentSceneIndex = 0;
+			this.animating.false;
 		}
 	}, {
 		key: "_changeAnimation",

@@ -2,32 +2,50 @@ import * as THREE from 'three';
 
 export default class Scenographer{
 	contructor(){
-        this.currentSceneIndex = 0;
 	}
 
 	setScenes(scenes){
+		this.currentSceneIndex = 0;
         this.scenes = scenes;
+        this.startedAt = 0;
+        this.timeElapsed = 0
+        this.animating = false;
 	}
 
 	update(time){
-		if(!this.scenesAreAvailable()) return;
-		console.log("startd");
-		console.log(time);
-		//debugger;
+		if (!this.scenesAreAvailable()) return;
+		if (this.startedAt === 0) { this.startedAt = time };
+		this.timeElapsed = time - this.startedAt;
+		if(this.timeElapsed >= this.getCurrentScene().duration){
+			this._changeScene(time);
+		}
+	    //console.log(this.timeElapsed);
 	}
+
+    _changeScene(time){
+    	this.startedAt = time;
+    	if(this.currentSceneIndex < this.scenes.length-1){
+    		this.currentSceneIndex++
+    	}else{
+            this.animating = false;
+    	}
+    }
+
 
 	scenesAreAvailable(){
 		return (this.scenes && this.scenes.length > 0);
 	}
 
 	getCurrentScene(){
-		console.log(this);
 		return this.scenes[this.currentSceneIndex];
 	}
 
 	resetScenes(){
 		this.scenes = [];
+		this.startedAt = 0
+		this.timeElapsed = 0
 		this.currentSceneIndex = 0;
+		this.animating.false;
 	}
 
     _changeAnimation(){
