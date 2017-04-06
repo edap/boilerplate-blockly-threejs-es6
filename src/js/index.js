@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import TWEEN from 'tween.js';
 import Stats from 'stats.js';
 import Actor from "./actor";
 import Plane from "./plane";

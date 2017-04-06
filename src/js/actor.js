@@ -17,9 +17,9 @@ export default class Actor {
         if(tweens.length>0){
             tweens[0].start().onComplete(()=>{
                 //debugger;
-                if(this.currentAnimationIndex < tweens.length){
+                if(this.currentAnimationIndex < tweens.length+1){
                     this.currentAnimationIndex++;
-                    tweens[this.currentAnimationIndex].start()
+                    tweens[this.currentAnimationIndex].start();
                 }
             });
         }else{
@@ -118,12 +118,14 @@ export default class Actor {
 
     _moveForwardTween(_length){
         let length = Number(_length);
-        let pos = {z:0};
-        let target = {z:length/10};
-        let rotationMatrix = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y).onUpdate(=>(){
-            this.mesh.translateZ(target.z);
-        });
-        console.log(pos);
+        let rotationMatrix_c = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
+        let distance = new THREE.Vector3(0.0, 0.0, length/10);
+        distance.applyMatrix4(rotationMatrix_c);
+        let target = {
+            x: String(distance.x),
+            y: String(distance.y),
+            z: String(distance.z)
+        }
         console.log(target);
         let tween = new TWEEN.Tween(this.mesh.position).to(target, 300);
         return tween;
@@ -132,8 +134,8 @@ export default class Actor {
     // Rotation and tweenjs http://stackoverflow.com/questions/9094971/threejs-rotation-animation
     _turnRightTween(_degree){
         let radians = Number(_degree) * THREE.Math.DEG2RAD;
-        let bla = String("+"+radians);
-        let target = {y:bla};
+        let radiansToString = String("+"+radians);
+        let target = {y:radiansToString};
         let tween = new TWEEN.Tween(this.mesh.rotation).to(target, 300);
         return tween;
     }

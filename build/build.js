@@ -45443,7 +45443,7 @@ var Actor = function () {
             if (tweens.length > 0) {
                 tweens[0].start().onComplete(function () {
                     //debugger;
-                    if (_this.currentAnimationIndex < tweens.length) {
+                    if (_this.currentAnimationIndex < tweens.length + 1) {
                         _this.currentAnimationIndex++;
                         tweens[_this.currentAnimationIndex].start();
                     }
@@ -45553,9 +45553,14 @@ var Actor = function () {
         key: '_moveForwardTween',
         value: function _moveForwardTween(_length) {
             var length = Number(_length);
-            var pos = { z: 0 };
-            var target = { z: length / 10 };
-            console.log(pos);
+            var rotationMatrix_c = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
+            var distance = new THREE.Vector3(0.0, 0.0, length / 10);
+            distance.applyMatrix4(rotationMatrix_c);
+            var target = {
+                x: String(distance.x),
+                y: String(distance.y),
+                z: String(distance.z)
+            };
             console.log(target);
             var tween = new _tween2.default.Tween(this.mesh.position).to(target, 300);
             return tween;
@@ -45567,8 +45572,8 @@ var Actor = function () {
         key: '_turnRightTween',
         value: function _turnRightTween(_degree) {
             var radians = Number(_degree) * THREE.Math.DEG2RAD;
-            var bla = String("+" + radians);
-            var target = { y: bla };
+            var radiansToString = String("+" + radians);
+            var target = { y: radiansToString };
             var tween = new _tween2.default.Tween(this.mesh.rotation).to(target, 300);
             return tween;
         }
@@ -45630,10 +45635,6 @@ exports.default = Commander;
 var _three = require('three');
 
 var THREE = _interopRequireWildcard(_three);
-
-var _tween = require('tween.js');
-
-var _tween2 = _interopRequireDefault(_tween);
 
 var _stats = require('stats.js');
 
@@ -45761,7 +45762,7 @@ window.run_code = function () {
 	//actor.testChained();
 };
 
-},{"./actor":6,"./commander":7,"./plane":9,"stats.js":2,"three":4,"three-orbit-controls":3,"tween.js":5}],9:[function(require,module,exports){
+},{"./actor":6,"./commander":7,"./plane":9,"stats.js":2,"three":4,"three-orbit-controls":3}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
