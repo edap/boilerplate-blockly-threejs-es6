@@ -35,7 +35,6 @@ export default class Actor {
 
     _consumeCommands(time){
         if (!this.scenographer.animating || !this.scenographer.scenesAreAvailable()) return;
-        
         let currentScene = this.scenographer.getCurrentScene();
         let key = currentScene["type"];
         let val = currentScene["value"];
@@ -51,7 +50,6 @@ export default class Actor {
                 // this.mesh.position.set(target);
                 // console.log(this.mesh.position);
                 //tweens.push(this._moveForwardTween(val));
-                
                 this.mesh.translateZ(0.01);
             break;
             case "turn_right":
@@ -64,7 +62,7 @@ export default class Actor {
             break;
             default:
                 console.log("action "+key+" not implemented");
-            break
+            break;
         }
     }
 
