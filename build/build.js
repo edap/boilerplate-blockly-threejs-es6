@@ -44356,17 +44356,34 @@ var Actor = function () {
         this.mesh.rotateY(Math.PI);
         this.instructions = [];
         this.target = new THREE.Object3D().copy(this.mesh, false);
+        this.mass = 10;
         this.velocity = new THREE.Vector3();
         this.topSpeed = 0.1;
-        this.accelleration = new THREE.Vector3(0.01, 0.01, 0.01);
+        this.accelleration = new THREE.Vector3();
         this.currentInstruction = null;
+        this.gravityForce = new THREE.Vector3(0.0, -0.01, 0.0);
     }
 
     _createClass(Actor, [{
+        key: "applyForce",
+        value: function applyForce(force) {
+            var copyForce = new THREE.Vector3().copy(force);
+            copyForce.divideScalar(this.mass);
+            this.accelleration.add(copyForce);
+        }
+    }, {
         key: "_limitVelocity",
         value: function _limitVelocity(max) {
             if (this.velocity > max) {
                 this.velocity = max;
+            }
+        }
+    }, {
+        key: "_limitGravity",
+        value: function _limitGravity() {
+            //fake plane contact. Objects does not disappear under the ground
+            if (this.mesh.position.y < 0) {
+                this.mesh.translateY(0.0);
             }
         }
     }, {
@@ -44390,10 +44407,18 @@ var Actor = function () {
                     case "move_forward":
                         var dir = new THREE.Vector3().copy(this.target.position);
                         dir.sub(this.mesh.position).normalize().multiplyScalar(0.0005);
-
-                        this.velocity.add(dir);
+                        this.accelleration = dir;
+                        this.applyForce(this.gravityForce);
+                        // this.applyForce(new THREE.Vector3(
+                        //     this.getRandomArbitrary(-0.001, 0.001),
+                        //     this.getRandomArbitrary(-0.001, 0.001),
+                        //     this.getRandomArbitrary(-0.001, 0.001)
+                        // ));
+                        this.velocity.add(this.accelleration);
                         this._limitVelocity(this.topSpeed);
+                        this._limitGravity();
                         this.mesh.position.add(this.velocity);
+                        this.accelleration.multiplyScalar(0);
                         break;
                     default:
                         console.log("command not implemented");
@@ -44438,6 +44463,11 @@ var Actor = function () {
         key: "update",
         value: function update(time) {
             this._consumeCommandsNew();
+        }
+    }, {
+        key: "getRandomArbitrary",
+        value: function getRandomArbitrary(min, max) {
+            return Math.random() * (max - min) + min;
         }
     }]);
 
