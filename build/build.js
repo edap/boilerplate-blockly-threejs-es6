@@ -44330,7 +44330,7 @@ module.exports = function( THREE ) {
 })));
 
 },{}],4:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -44338,15 +44338,9 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _three = require('three');
+var _three = require("three");
 
 var THREE = _interopRequireWildcard(_three);
-
-var _scenographer = require('./scenographer');
-
-var _scenographer2 = _interopRequireDefault(_scenographer);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -44360,66 +44354,68 @@ var Actor = function () {
         var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         this.mesh = new THREE.Mesh(geometry, material);
         this.mesh.rotateY(Math.PI);
-        this.durationRotation = 3000; //ms
-        this.scenographer = new _scenographer2.default();
-        this.durationStep = 3000; //ms
-        // probably these should go in a timeline class
-        this.currentCommandIndex = 0;
-        this.commandStartedAt = 0;
+        this.instructions = [];
+        this.target = new THREE.Object3D().copy(this.mesh, false);
+        this.velocity = new THREE.Vector3();
+        this.topSpeed = 0.1;
+        this.accelleration = new THREE.Vector3(0.01, 0.01, 0.01);
+        this.currentInstruction = null;
     }
 
     _createClass(Actor, [{
-        key: 'getStepDuration',
-        value: function getStepDuration() {
-            return this.durationStep;
+        key: "_limitVelocity",
+        value: function _limitVelocity(max) {
+            if (this.velocity > max) {
+                this.velocity = max;
+            }
         }
     }, {
-        key: 'getRotationDuration',
-        value: function getRotationDuration() {
-            return this.durationRotation;
-        }
-    }, {
-        key: 'startConsume',
+        key: "startConsume",
         value: function startConsume(instructions) {
-            if (instructions.length > 0 && !this.scenographer.animating) {
-                this.scenographer.setScenes(instructions);
-                this.scenographer.animating = true;
-            } else if (this.scenographer.animating) {
-                console.log("instructions are already being executed");
+            this.instructions = instructions;
+            if (this.instructions.length > 0) {
+                this.currentInstruction = this.instructions.shift();
+                this._setNewTarget(this.currentInstruction);
             } else {
                 console.log("no instructions to execute");
             }
         }
     }, {
-        key: '_consumeCommands',
-        value: function _consumeCommands(time) {
-            if (!this.scenographer.animating || !this.scenographer.scenesAreAvailable()) return;
+        key: "_consumeCommandsNew",
+        value: function _consumeCommandsNew() {
+            if (this.currentInstruction) {
+                var instruction = this.currentInstruction;
+                var key = instruction["type"];
+                switch (key) {
+                    case "move_forward":
+                        var dir = new THREE.Vector3().copy(this.target.position);
+                        dir.sub(this.mesh.position).normalize().multiplyScalar(0.0005);
 
-            var currentScene = this.scenographer.getCurrentScene();
-            var key = currentScene["type"];
-            var val = currentScene["value"];
-            var duration = currentScene["duration"];
-            var progress = 0;
+                        this.velocity.add(dir);
+                        this._limitVelocity(this.topSpeed);
+                        this.mesh.position.add(this.velocity);
+                        break;
+                    default:
+                        console.log("command not implemented");
+                        break;
+                }
+            }
+        }
+    }, {
+        key: "_nextAnimation",
+        value: function _nextAnimation() {}
+    }, {
+        key: "_setNewTarget",
+        value: function _setNewTarget(instruction) {
+            var key = instruction["type"];
+            var val = instruction["value"];
             switch (key) {
                 case "move_forward":
-                    // let copy_pos = new THREE.Vector3().copy(this.mesh.position);
-                    // let target = copy_pos.add(new THREE.Vector3(0.0, 0.0, val/40));
-                    // let rotationMatrix = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
-                    // target.applyMatrix4(rotationMatrix);
-                    // console.log(this.mesh.position);
-                    // this.mesh.position.set(target);
-                    // console.log(this.mesh.position);
-                    //tweens.push(this._moveForwardTween(val));
-
-                    this.mesh.translateZ(0.01);
+                    this.target.translateZ(val);
                     break;
                 case "turn_right":
-                    this.mesh.rotateY(-0.01);
-                    //tweens.push(this._turnRightTween(val));
                     break;
                 case "turn_left":
-                    this.mesh.rotateY(+0.01);
-                    //tweens.push(this._turnRightTween(val));
                     break;
                 default:
                     console.log("action " + key + " not implemented");
@@ -44427,22 +44423,21 @@ var Actor = function () {
             }
         }
     }, {
-        key: 'getMesh',
+        key: "getMesh",
         value: function getMesh() {
             return this.mesh;
         }
     }, {
-        key: 'reset',
+        key: "reset",
         value: function reset() {
-            this.mesh.position.set(new THREE.Vector3(0.0, 0.0, 0.0));
-            this.scenographer.resetScenes();
-            this.mesh.rotation.set(0.0, 0.0, 0.0);
+            this.mesh.position.set(new THREE.Vector3());
+            this.target = new THREE.Object3D().copy(this.mesh, false);
+            this.mesh.rotation.set(0.0, 0.0, 0.0); // not sure if this is the correct way to reset a rotation
         }
     }, {
-        key: 'update',
+        key: "update",
         value: function update(time) {
-            this.scenographer.update(time * 1000);
-            this._consumeCommands(time * 1000);
+            this._consumeCommandsNew();
         }
     }]);
 
@@ -44451,30 +44446,7 @@ var Actor = function () {
 
 exports.default = Actor;
 
-},{"./scenographer":8,"three":3}],5:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _three = require('three');
-
-var THREE = _interopRequireWildcard(_three);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Commander = function Commander(instruction) {
-	_classCallCheck(this, Commander);
-
-	this.instruction = instruction;
-};
-
-exports.default = Commander;
-
-},{"three":3}],6:[function(require,module,exports){
+},{"three":3}],5:[function(require,module,exports){
 'use strict';
 
 var _three = require('three');
@@ -44492,10 +44464,6 @@ var _actor2 = _interopRequireDefault(_actor);
 var _plane = require('./plane');
 
 var _plane2 = _interopRequireDefault(_plane);
-
-var _commander = require('./commander');
-
-var _commander2 = _interopRequireDefault(_commander);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -44553,8 +44521,7 @@ function initGame() {
 		//actor.animationMove(dropdown_actor_move_forward_distance);
 		instructions.push({
 			"type": "move_forward",
-			"value": dropdown_actor_move_forward_distance,
-			"duration": actor.getStepDuration() * dropdown_actor_move_forward_distance
+			"value": dropdown_actor_move_forward_distance
 		});
 		var code = "console.log('move forward');";
 		return code;
@@ -44564,8 +44531,7 @@ function initGame() {
 		var angle_actor_turn_right_value = block.getFieldValue('actor_turn_right_value');
 		instructions.push({
 			"type": "turn_right",
-			"value": angle_actor_turn_right_value,
-			"duration": actor.getRotationDuration()
+			"value": angle_actor_turn_right_value
 		});
 		var code = "console.log('actor_turn_right');";
 		return code;
@@ -44575,8 +44541,7 @@ function initGame() {
 		var angle_actor_turn_left_value = block.getFieldValue('actor_turn_left_value');
 		instructions.push({
 			"type": "turn_left",
-			"value": angle_actor_turn_left_value,
-			"duration": actor.getRotationDuration()
+			"value": angle_actor_turn_left_value
 		});
 		var code = "console.log('actor_turn_left');";
 		return code;
@@ -44594,7 +44559,7 @@ function animate() {
 	var time = clock.getElapsedTime();
 	actor.update(time);
 	render();
-	controls.update;
+	controls.update();
 	//console.log(actor.getMesh().position)
 	stats.end();
 	requestAnimationFrame(animate);
@@ -44624,7 +44589,7 @@ window.run_code = function () {
 	//actor.testChained();
 };
 
-},{"./actor":4,"./commander":5,"./plane":7,"stats.js":1,"three":3,"three-orbit-controls":2}],7:[function(require,module,exports){
+},{"./actor":4,"./plane":6,"stats.js":1,"three":3,"three-orbit-controls":2}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -44667,100 +44632,6 @@ var Plane = function () {
 
 exports.default = Plane;
 
-},{"three":3}],8:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _three = require("three");
-
-var THREE = _interopRequireWildcard(_three);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Scenographer = function () {
-	function Scenographer() {
-		_classCallCheck(this, Scenographer);
-	}
-
-	_createClass(Scenographer, [{
-		key: "contructor",
-		value: function contructor() {}
-	}, {
-		key: "setScenes",
-		value: function setScenes(scenes) {
-			this.currentSceneIndex = 0;
-			this.scenes = scenes;
-			this.startedAt = 0;
-			this.timeElapsed = 0;
-			this.animating = false;
-		}
-	}, {
-		key: "update",
-		value: function update(time) {
-			if (!this.scenesAreAvailable()) return;
-			if (this.startedAt === 0) {
-				this.startedAt = time;
-			};
-			this.timeElapsed = time - this.startedAt;
-			if (this.timeElapsed >= this.getCurrentScene().duration) {
-				this._changeScene(time);
-			}
-			//console.log(this.timeElapsed);
-		}
-	}, {
-		key: "_changeScene",
-		value: function _changeScene(time) {
-			this.startedAt = time;
-			if (this.currentSceneIndex < this.scenes.length - 1) {
-				this.currentSceneIndex++;
-			} else {
-				this.animating = false;
-			}
-		}
-	}, {
-		key: "scenesAreAvailable",
-		value: function scenesAreAvailable() {
-			return this.scenes && this.scenes.length > 0;
-		}
-	}, {
-		key: "getCurrentScene",
-		value: function getCurrentScene() {
-			return this.scenes[this.currentSceneIndex];
-		}
-	}, {
-		key: "resetScenes",
-		value: function resetScenes() {
-			this.scenes = [];
-			this.startedAt = 0;
-			this.timeElapsed = 0;
-			this.currentSceneIndex = 0;
-			this.animating.false;
-		}
-	}, {
-		key: "_changeAnimation",
-		value: function _changeAnimation() {
-			console.log("change");
-			if (this.currentCommandIndex < this.commands.length - 1) {
-				this.currentCommandIndex++;
-			} else {
-				console.log("all animations were executed");
-				this.animating = false;
-			}
-		}
-	}]);
-
-	return Scenographer;
-}();
-
-exports.default = Scenographer;
-
-},{"three":3}]},{},[6])
+},{"three":3}]},{},[5])
 
 //# sourceMappingURL=build.js.map

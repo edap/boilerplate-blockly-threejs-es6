@@ -1,64 +1,70 @@
 import * as THREE from 'three';
-import Scenographer from './scenographer';
 export default class Actor {
     constructor () {
         let geometry = new THREE.BoxGeometry( 1, 1, 1 );
         let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
         this.mesh = new THREE.Mesh( geometry, material );
         this.mesh.rotateY(Math.PI);
-        this.durationRotation = 3000; //ms
-        this.scenographer = new Scenographer();
-        this.durationStep = 3000; //ms
-        // probably these should go in a timeline class
-        this.currentCommandIndex = 0;
-        this.commandStartedAt = 0;
+        this.instructions = [];
+        this.target = new THREE.Object3D().copy(this.mesh, false);
+        this.velocity = new THREE.Vector3();
+        this.topSpeed = 0.1;
+        this.accelleration = new THREE.Vector3(0.01,0.01,0.01);
+        this.currentInstruction = null;
     }
 
-    getStepDuration(){
-        return this.durationStep;
-    }
-
-    getRotationDuration(){
-        return this.durationRotation;
+    _limitVelocity(max){
+        if(this.velocity > max){
+            this.velocity = max;
+        }
     }
 
     startConsume(instructions){
-        if(instructions.length>0 && !this.scenographer.animating){
-            this.scenographer.setScenes(instructions);
-            this.scenographer.animating = true;
-        }else if(this.scenographer.animating){
-            console.log("instructions are already being executed");
+        this.instructions = instructions;
+        if(this.instructions.length>0){
+            this.currentInstruction = this.instructions.shift();
+            this._setNewTarget(this.currentInstruction);
         }else{
             console.log("no instructions to execute");
         }
     }
 
-    _consumeCommands(time){
-        if (!this.scenographer.animating || !this.scenographer.scenesAreAvailable()) return;
-        let currentScene = this.scenographer.getCurrentScene();
-        let key = currentScene["type"];
-        let val = currentScene["value"];
-        let duration = currentScene["duration"];
-        let progress = 0;
+    _consumeCommandsNew(){
+        if(this.currentInstruction){
+            let instruction = this.currentInstruction;
+            let key = instruction["type"];
+            switch(key){
+                case "move_forward":
+                let dir = new THREE.Vector3().copy(this.target.position);
+                dir.sub(this.mesh.position)
+                    .normalize()
+                    .multiplyScalar(0.0005);
+
+                this.velocity.add(dir);
+                this._limitVelocity(this.topSpeed);
+                this.mesh.position.add(this.velocity);
+                break;
+                default:
+                    console.log("command not implemented");
+                break;
+            }
+        }
+    }
+
+    _nextAnimation(){
+        
+    }
+
+    _setNewTarget(instruction){
+        let key = instruction["type"];
+        let val = instruction["value"];
         switch(key){
             case "move_forward":
-                // let copy_pos = new THREE.Vector3().copy(this.mesh.position);
-                // let target = copy_pos.add(new THREE.Vector3(0.0, 0.0, val/40));
-                // let rotationMatrix = new THREE.Matrix4().makeRotationY(this.mesh.rotation.y);
-                // target.applyMatrix4(rotationMatrix);
-                // console.log(this.mesh.position);
-                // this.mesh.position.set(target);
-                // console.log(this.mesh.position);
-                //tweens.push(this._moveForwardTween(val));
-                this.mesh.translateZ(0.01);
+                this.target.translateZ(val);
             break;
             case "turn_right":
-                this.mesh.rotateY(-0.01);
-                //tweens.push(this._turnRightTween(val));
             break;
             case "turn_left":
-                this.mesh.rotateY(+0.01);
-                //tweens.push(this._turnRightTween(val));
             break;
             default:
                 console.log("action "+key+" not implemented");
@@ -71,13 +77,12 @@ export default class Actor {
     }
 
     reset() {
-        this.mesh.position.set(new THREE.Vector3(0.0, 0.0, 0.0));
-        this.scenographer.resetScenes();
-        this.mesh.rotation.set(0.0,0.0,0.0);
+        this.mesh.position.set(new THREE.Vector3());
+        this.target = new THREE.Object3D().copy(this.mesh, false);
+        this.mesh.rotation.set(0.0,0.0,0.0); // not sure if this is the correct way to reset a rotation
     }
 
     update(time){
-        this.scenographer.update(time*1000);
-        this._consumeCommands(time*1000);
+        this._consumeCommandsNew();
     }
 }

@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import Stats from 'stats.js';
 import Actor from "./actor";
 import Plane from "./plane";
-import Commander from "./commander";
 
 const debug = true;
 const OrbitControls = require('three-orbit-controls')(THREE);
@@ -48,8 +47,7 @@ function initGame(){
         //actor.animationMove(dropdown_actor_move_forward_distance);
         instructions.push({
         	"type":"move_forward",
-        	"value": dropdown_actor_move_forward_distance,
-        	"duration": (actor.getStepDuration() * dropdown_actor_move_forward_distance)
+        	"value": dropdown_actor_move_forward_distance
         });
 		var code = "console.log('move forward');";
 		return code;
@@ -59,8 +57,7 @@ function initGame(){
         var angle_actor_turn_right_value = block.getFieldValue('actor_turn_right_value');
         instructions.push({
         	"type":"turn_right",
-        	"value": angle_actor_turn_right_value,
-        	"duration": actor.getRotationDuration()
+        	"value": angle_actor_turn_right_value
         });
 		var code = "console.log('actor_turn_right');";
 		return code;
@@ -70,8 +67,7 @@ function initGame(){
         var angle_actor_turn_left_value = block.getFieldValue('actor_turn_left_value');
         instructions.push({
         	"type":"turn_left",
-        	"value": angle_actor_turn_left_value,
-        	"duration": actor.getRotationDuration()
+        	"value": angle_actor_turn_left_value
         });
 		var code = "console.log('actor_turn_left');";
 		return code;
@@ -84,13 +80,13 @@ function initGame(){
 }
 
 function animate() {
-	stats.begin();
+    stats.begin();
     let delta = clock.getDelta();
     let time = clock.getElapsedTime();
-	actor.update(time)
-	render();
-	controls.update;
-	//console.log(actor.getMesh().position)
+    actor.update(time);
+    render();
+    controls.update();
+    //console.log(actor.getMesh().position)
     stats.end();
     requestAnimationFrame( animate );
 }
