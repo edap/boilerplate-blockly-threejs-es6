@@ -44356,11 +44356,13 @@ var Actor = function () {
         this.mesh.rotateY(Math.PI);
         this.instructions = [];
         this.target = new THREE.Object3D().copy(this.mesh, false);
-        this.mass = 10;
+        this.mass = 0.1;
         this.velocity = new THREE.Vector3();
-        this.topSpeed = 0.1;
+        this.topSpeed = 0.05;
+        this.topAccelleration = 0.015;
         this.accelleration = new THREE.Vector3();
         this.currentInstruction = null;
+        this.G = 0.4; //universal gravitational constant
         this.gravityForce = new THREE.Vector3(0.0, -0.01, 0.0);
     }
 
@@ -44374,16 +44376,14 @@ var Actor = function () {
     }, {
         key: "_limitVelocity",
         value: function _limitVelocity(max) {
-            if (this.velocity > max) {
-                this.velocity = max;
-            }
+            this.velocity.clampLength(-0.2, 0.2);
         }
     }, {
         key: "_limitGravity",
         value: function _limitGravity() {
             //fake plane contact. Objects does not disappear under the ground
             if (this.mesh.position.y < 0) {
-                this.mesh.translateY(0.0);
+                this.mesh.position.setY(0.0);
             }
         }
     }, {
@@ -44402,33 +44402,53 @@ var Actor = function () {
         value: function _consumeCommandsNew() {
             if (this.currentInstruction) {
                 var instruction = this.currentInstruction;
-                var key = instruction["type"];
-                switch (key) {
+                var movementType = instruction["type"];
+                switch (movementType) {
                     case "move_forward":
-                        var dir = new THREE.Vector3().copy(this.target.position);
-                        dir.sub(this.mesh.position).normalize().multiplyScalar(0.0005);
-                        this.accelleration = dir;
+                        var dir = new THREE.Vector3().subVectors(this.target.position, this.mesh.position);
+                        dir.setLength(this.topAccelleration);
+
+                        //apply forces
+                        this.applyForce(dir);
                         this.applyForce(this.gravityForce);
-                        // this.applyForce(new THREE.Vector3(
-                        //     this.getRandomArbitrary(-0.001, 0.001),
-                        //     this.getRandomArbitrary(-0.001, 0.001),
-                        //     this.getRandomArbitrary(-0.001, 0.001)
-                        // ));
+                        // add accelleration
                         this.velocity.add(this.accelleration);
+                        //limits
                         this._limitVelocity(this.topSpeed);
-                        this._limitGravity();
+                        //position object
                         this.mesh.position.add(this.velocity);
-                        this.accelleration.multiplyScalar(0);
+                        this._limitGravity();
+                        // reset forces
+                        this.accelleration.multiplyScalar(0.0);
                         break;
                     default:
                         console.log("command not implemented");
                         break;
+
+                }
+                if (this._targetReached(movementType)) {
+                    this.nextAnimation();
                 }
             }
         }
     }, {
         key: "_nextAnimation",
-        value: function _nextAnimation() {}
+        value: function _nextAnimation() {
+            if (this.instructions.length > 0) {
+                this.currentInstruction = this.instructions.shift();
+                this._setNewTarget(this.currentInstruction);
+            } else {
+                this.currentInstruction = null;
+            }
+        }
+    }, {
+        key: "_targetReached",
+        value: function _targetReached(movement, difference) {
+            if (movement === "move_forward") {
+                var distance = this.mesh.position.distanceTo(this.target.position);
+                return distance <= 0.0;
+            }
+        }
     }, {
         key: "_setNewTarget",
         value: function _setNewTarget(instruction) {
