@@ -44409,7 +44409,6 @@ var Actor = function () {
                     case "move_forward":
                         var dir = new THREE.Vector3().subVectors(this.target.position, this.mesh.position);
                         dir.setLength(this.topAccelleration);
-
                         //apply forces
                         this.applyForce(dir);
                         this.applyForce(this.gravityForce);
@@ -44498,7 +44497,7 @@ var Actor = function () {
         value: function reset() {
             this.mesh.position.set(new THREE.Vector3());
             this.target = new THREE.Object3D().copy(this.mesh, false);
-            this.mesh.rotation.set(0.0, 0.0, 0.0); // not sure if this is the correct way to reset a rotation
+            this.mesh.rotation.set(0.0, 0.0, 0.0); // TODO. Not sure if this is the correct way to reset a rotation
             this.targetRadiansOnY = 0;
             this.currentRadiansOnY = 0;
         }
@@ -44556,110 +44555,96 @@ var actor = void 0,
     clock = void 0;
 
 function initGame() {
-	clock = new THREE.Clock();
-	var screenWidth = window.innerWidth / 2;
-	var screenHeight = window.innerHeight;
+    clock = new THREE.Clock();
+    var screenWidth = window.innerWidth / 2;
+    var screenHeight = window.innerHeight;
 
-	scene = new THREE.Scene();
-	camera = new THREE.PerspectiveCamera(75, screenWidth / screenHeight, 0.1, 1000);
-	canvas = document.getElementById('game-canvas');
-	renderer = new THREE.WebGLRenderer({ antialias: true });
-	renderer.setSize(screenWidth, screenHeight);
-	canvas.appendChild(renderer.domElement);
-	controls = new OrbitControls(camera, renderer.domElement);
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, screenWidth / screenHeight, 0.1, 1000);
+    canvas = document.getElementById('game-canvas');
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(screenWidth, screenHeight);
+    canvas.appendChild(renderer.domElement);
+    controls = new OrbitControls(camera, renderer.domElement);
 
-	plane = new _plane2.default();
-	plane.rotateX(-Math.PI / 2);
-	actor = new _actor2.default();
-	scene.add(actor.getMesh());
-	scene.add(plane.getMesh());
+    plane = new _plane2.default();
+    plane.rotateX(-Math.PI / 2);
+    actor = new _actor2.default();
+    scene.add(actor.getMesh());
+    scene.add(plane.getMesh());
 
-	camera.position.z = 5;
-	camera.position.y = 2;
+    camera.position.z = 5;
+    camera.position.y = 2;
 
-	// stats
-	stats = new _stats2.default();
-	stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
-	stats.domElement.style.left = screenWidth * 2 - 80;
-	if (debug) {
-		canvas.appendChild(stats.domElement);
-	}
-	var axes = new THREE.AxisHelper(2);
-	scene.add(axes);
+    // stats
+    stats = new _stats2.default();
+    stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+    stats.domElement.style.left = screenWidth * 2 - 80;
+    if (debug) {
+        canvas.appendChild(stats.domElement);
+    }
+    var axes = new THREE.AxisHelper(2);
+    scene.add(axes);
 
-	animate();
+    animate();
 
-	window.Blockly.JavaScript['actor_move_forward'] = function (block) {
-		var dropdown_actor_move_forward_distance = block.getFieldValue('actor_move_forward_distance');
-		//actor.animationMove(dropdown_actor_move_forward_distance);
-		instructions.push({
-			"type": "move_forward",
-			"value": dropdown_actor_move_forward_distance
-		});
-		var code = "console.log('move forward');";
-		return code;
-	};
+    window.Blockly.JavaScript['actor_move_forward'] = function (block) {
+        var dropdown_actor_move_forward_distance = block.getFieldValue('actor_move_forward_distance');
+        var code = "instructions.push({type:'move_forward',value:" + dropdown_actor_move_forward_distance + "});";
+        return code;
+    };
 
-	window.Blockly.JavaScript['actor_turn_right'] = function (block) {
-		var angle_actor_turn_right_value = block.getFieldValue('actor_turn_right_value');
-		instructions.push({
-			"type": "turn_right",
-			"value": angle_actor_turn_right_value
-		});
-		var code = "console.log('actor_turn_right');";
-		return code;
-	};
+    window.Blockly.JavaScript['actor_turn_right'] = function (block) {
+        var angle_actor_turn_right_value = block.getFieldValue('actor_turn_right_value');
+        var code = "instructions.push({type:'turn_right',value:" + angle_actor_turn_right_value + "});";
+        return code;
+    };
 
-	window.Blockly.JavaScript['actor_turn_left'] = function (block) {
-		var angle_actor_turn_left_value = block.getFieldValue('actor_turn_left_value');
-		instructions.push({
-			"type": "turn_left",
-			"value": angle_actor_turn_left_value
-		});
-		var code = "console.log('actor_turn_left');";
-		return code;
-	};
+    window.Blockly.JavaScript['actor_turn_left'] = function (block) {
+        var angle_actor_turn_left_value = block.getFieldValue('actor_turn_left_value');
+        var code = "instructions.push({type:'turn_left',value:" + angle_actor_turn_left_value + "});";
+        return code;
+    };
 
-	window.Blockly.JavaScript['actor_jump'] = function (block) {
-		var code = "console.log('actor_jump');";
-		return code;
-	};
+    window.Blockly.JavaScript['actor_jump'] = function (block) {
+        var code = "console.log('actor_jump');";
+        return code;
+    };
 }
 
 function animate() {
-	stats.begin();
-	var delta = clock.getDelta();
-	var time = clock.getElapsedTime();
-	actor.update(time);
-	render();
-	controls.update();
-	//console.log(actor.getMesh().position)
-	stats.end();
-	requestAnimationFrame(animate);
+    stats.begin();
+    var delta = clock.getDelta();
+    var time = clock.getElapsedTime();
+    actor.update(time);
+    render();
+    controls.update();
+    //console.log(actor.getMesh().position)
+    stats.end();
+    requestAnimationFrame(animate);
 }
 
 function render() {
-	renderer.render(scene, camera);
+    renderer.render(scene, camera);
 };
 
 window.blockly_loaded = function (blockly) {
-	// init the game only after window.Blockly definition
-	window.Blockly = blockly;
-	initGame();
+    // init the game only after window.Blockly definition
+    window.Blockly = blockly;
+    initGame();
 };
 
 window.reset_car = function () {
-	actor.reset();
+    actor.reset();
 };
 
 window.run_code = function () {
-	//reset instructions if the player did not complete everything
-	// probably you should reset the position too
-	instructions = [];
-	var code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
-	eval(code);
-	actor.startConsume(instructions);
-	//actor.testChained();
+    //reset instructions if the player did not complete everything
+    // probably you should reset the position too
+    instructions = [];
+    var code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
+    eval(code);
+    actor.startConsume(instructions);
 };
 
 },{"./actor":4,"./plane":6,"stats.js":1,"three":3,"three-orbit-controls":2}],6:[function(require,module,exports){

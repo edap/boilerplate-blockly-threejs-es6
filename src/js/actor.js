@@ -19,7 +19,6 @@ export default class Actor {
         this.gravityForce=  new THREE.Vector3(0.0,-0.01,0.0);
     }
 
-
     applyForce(force){
         let copyForce = new THREE.Vector3().copy(force);
         copyForce.divideScalar(this.mass);
@@ -55,7 +54,6 @@ export default class Actor {
                 case "move_forward":
                     let dir = new THREE.Vector3().subVectors(this.target.position, this.mesh.position);
                     dir.setLength(this.topAccelleration);
-
                     //apply forces
                     this.applyForce(dir);
                     this.applyForce(this.gravityForce);
@@ -106,7 +104,6 @@ export default class Actor {
         }
     };
 
-
     _setNewTarget(instruction){
         let key = instruction["type"];
         let val = instruction["value"];
@@ -140,7 +137,7 @@ export default class Actor {
     reset() {
         this.mesh.position.set(new THREE.Vector3());
         this.target = new THREE.Object3D().copy(this.mesh, false);
-        this.mesh.rotation.set(0.0,0.0,0.0); // not sure if this is the correct way to reset a rotation
+        this.mesh.rotation.set(0.0,0.0,0.0); // TODO. Not sure if this is the correct way to reset a rotation
         this.targetRadiansOnY = 0;
         this.currentRadiansOnY = 0;
     }
@@ -148,8 +145,8 @@ export default class Actor {
     update(time){
         this._consumeCommandsNew();
     }
+
     getRandomArbitrary(min, max){
         return Math.random() * (max -min) +min;
     }
-
 }
