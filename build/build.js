@@ -44356,13 +44356,15 @@ var Actor = function () {
         this.mesh.rotateY(Math.PI);
         this.instructions = [];
         this.target = new THREE.Object3D().copy(this.mesh, false);
+        this.targetRadiansOnY = 0;
+        this.currentRadiansOnY = 0;
         this.mass = 0.1;
         this.velocity = new THREE.Vector3();
+        this.angularVelocity = 0.015;
         this.topSpeed = 0.05;
-        this.topAccelleration = 0.015;
+        this.topAccelleration = 0.0015;
         this.accelleration = new THREE.Vector3();
         this.currentInstruction = null;
-        this.G = 0.4; //universal gravitational constant
         this.gravityForce = new THREE.Vector3(0.0, -0.01, 0.0);
     }
 
@@ -44421,13 +44423,21 @@ var Actor = function () {
                         // reset forces
                         this.accelleration.multiplyScalar(0.0);
                         break;
+                    case "turn_right":
+                        this.mesh.rotateY(-this.angularVelocity);
+                        this.currentRadiansOnY += this.angularVelocity;
+                        break;
+                    case "turn_left":
+                        this.mesh.rotateY(this.angularVelocity);
+                        this.currentRadiansOnY += this.angularVelocity;
+                        break;
                     default:
                         console.log("command not implemented");
                         break;
 
                 }
                 if (this._targetReached(movementType)) {
-                    this.nextAnimation();
+                    this._nextAnimation();
                 }
             }
         }
@@ -44443,10 +44453,12 @@ var Actor = function () {
         }
     }, {
         key: "_targetReached",
-        value: function _targetReached(movement, difference) {
+        value: function _targetReached(movement) {
             if (movement === "move_forward") {
                 var distance = this.mesh.position.distanceTo(this.target.position);
-                return distance <= 0.0;
+                return distance <= 0.01;
+            } else if (movement === "turn_right" || movement === "turn_left") {
+                return this.currentRadiansOnY >= this.targetRadiansOnY;
             }
         }
     }, {
@@ -44454,13 +44466,22 @@ var Actor = function () {
         value: function _setNewTarget(instruction) {
             var key = instruction["type"];
             var val = instruction["value"];
+            var rad = void 0;
             switch (key) {
                 case "move_forward":
                     this.target.translateZ(val);
                     break;
                 case "turn_right":
+                    rad = val * (Math.PI / 180);
+                    this.targetRadiansOnY = rad;
+                    this.currentRadiansOnY = 0;
+                    this.target.rotateY(-rad);
                     break;
                 case "turn_left":
+                    rad = val * (Math.PI / 180);
+                    this.targetRadiansOnY = rad;
+                    this.currentRadiansOnY = 0;
+                    this.target.rotateY(rad);
                     break;
                 default:
                     console.log("action " + key + " not implemented");
@@ -44478,6 +44499,8 @@ var Actor = function () {
             this.mesh.position.set(new THREE.Vector3());
             this.target = new THREE.Object3D().copy(this.mesh, false);
             this.mesh.rotation.set(0.0, 0.0, 0.0); // not sure if this is the correct way to reset a rotation
+            this.targetRadiansOnY = 0;
+            this.currentRadiansOnY = 0;
         }
     }, {
         key: "update",

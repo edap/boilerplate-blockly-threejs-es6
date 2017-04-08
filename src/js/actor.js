@@ -7,13 +7,15 @@ export default class Actor {
         this.mesh.rotateY(Math.PI);
         this.instructions = [];
         this.target = new THREE.Object3D().copy(this.mesh, false);
+        this.targetRadiansOnY = 0;
+        this.currentRadiansOnY = 0;
         this.mass = 0.1;
         this.velocity = new THREE.Vector3();
+        this.angularVelocity = 0.015;
         this.topSpeed = 0.05;
-        this.topAccelleration = 0.015;
+        this.topAccelleration = 0.0015;
         this.accelleration = new THREE.Vector3();
         this.currentInstruction = null;
-        this.G = 0.4; //universal gravitational constant
         this.gravityForce=  new THREE.Vector3(0.0,-0.01,0.0);
     }
 
@@ -51,21 +53,29 @@ export default class Actor {
             let movementType = instruction["type"];
             switch(movementType){
                 case "move_forward":
-                let dir = new THREE.Vector3().subVectors(this.target.position, this.mesh.position);
-                dir.setLength(this.topAccelleration);
+                    let dir = new THREE.Vector3().subVectors(this.target.position, this.mesh.position);
+                    dir.setLength(this.topAccelleration);
 
-                //apply forces
-                this.applyForce(dir);
-                this.applyForce(this.gravityForce);
-                // add accelleration
-                this.velocity.add(this.accelleration);
-                //limits
-                this._limitVelocity(this.topSpeed);
-                //position object
-                this.mesh.position.add(this.velocity);
-                this._limitGravity();
-                // reset forces
-                this.accelleration.multiplyScalar(0.0);
+                    //apply forces
+                    this.applyForce(dir);
+                    this.applyForce(this.gravityForce);
+                    // add accelleration
+                    this.velocity.add(this.accelleration);
+                    //limits
+                    this._limitVelocity(this.topSpeed);
+                    //position object
+                    this.mesh.position.add(this.velocity);
+                    this._limitGravity();
+                    // reset forces
+                    this.accelleration.multiplyScalar(0.0);
+                break;
+                case "turn_right":
+                     this.mesh.rotateY(-this.angularVelocity);
+                     this.currentRadiansOnY += this.angularVelocity;
+                break;
+                case "turn_left":
+                    this.mesh.rotateY(this.angularVelocity);
+                    this.currentRadiansOnY += this.angularVelocity;
                 break;
                 default:
                     console.log("command not implemented");
@@ -73,7 +83,7 @@ export default class Actor {
 
             }
             if(this._targetReached(movementType)){
-                this.nextAnimation();
+                this._nextAnimation();
             }
         }
     }
@@ -87,23 +97,35 @@ export default class Actor {
         }
     }
 
-    _targetReached(movement, difference){
+    _targetReached(movement){
         if(movement === "move_forward"){
             let distance = this.mesh.position.distanceTo(this.target.position);
-            return distance <= 0.0;
+            return distance <= 0.01;
+        }else if(movement === "turn_right" || movement === "turn_left"){
+            return (this.currentRadiansOnY >= this.targetRadiansOnY);
         }
     };
+
 
     _setNewTarget(instruction){
         let key = instruction["type"];
         let val = instruction["value"];
+        let rad;
         switch(key){
             case "move_forward":
                 this.target.translateZ(val);
             break;
             case "turn_right":
+                rad = val * (Math.PI/180);
+                this.targetRadiansOnY = rad;
+                this.currentRadiansOnY = 0;
+                this.target.rotateY(-rad);
             break;
             case "turn_left":
+                rad = val * (Math.PI/180);
+                this.targetRadiansOnY = rad;
+                this.currentRadiansOnY = 0;
+                this.target.rotateY(rad);
             break;
             default:
                 console.log("action "+key+" not implemented");
@@ -119,6 +141,8 @@ export default class Actor {
         this.mesh.position.set(new THREE.Vector3());
         this.target = new THREE.Object3D().copy(this.mesh, false);
         this.mesh.rotation.set(0.0,0.0,0.0); // not sure if this is the correct way to reset a rotation
+        this.targetRadiansOnY = 0;
+        this.currentRadiansOnY = 0;
     }
 
     update(time){
