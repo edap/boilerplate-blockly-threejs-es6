@@ -8,9 +8,11 @@
 <body>
   <h1 id="header">Blockly and Threejs boilerplate</h1>
   <div class = "container">
+    <div id="game-canvas"></div>
+
     <div class="game-edit">
-      <div id="blockly_editor">
-        <iframe id="blockly" src="blockly.html" width="100%"></iframe>
+      <div class="ki">
+          messages
       </div>
       <button id="button_run" onclick="run_code()">
         Run Code Block
@@ -18,9 +20,10 @@
       <button id="button_reset" onclick="reset_car()">
         Reset Car
       </button>
+      <div id="blockly_editor">
+        <iframe id="blockly" src="blockly.html" width="100%"></iframe>
+      </div>
     </div>
-
-    <div id="game-canvas"></div>
   <div/>
   <script src="build.js"></script>
   </body>

@@ -44366,6 +44366,7 @@ var Actor = function () {
         this.accelleration = new THREE.Vector3();
         this.currentInstruction = null;
         this.gravityForce = new THREE.Vector3(0.0, -0.01, 0.0);
+        console.log(this.mesh.position);
     }
 
     _createClass(Actor, [{
@@ -44405,9 +44406,11 @@ var Actor = function () {
             if (this.currentInstruction) {
                 var instruction = this.currentInstruction;
                 var movementType = instruction["type"];
+                var movementValue = instruction["value"];
+                var dir = null;
                 switch (movementType) {
                     case "move_forward":
-                        var dir = new THREE.Vector3().subVectors(this.target.position, this.mesh.position);
+                        dir = new THREE.Vector3().subVectors(this.target.position, this.mesh.position);
                         dir.setLength(this.topAccelleration);
                         //apply forces
                         this.applyForce(dir);
@@ -44422,13 +44425,33 @@ var Actor = function () {
                         // reset forces
                         this.accelleration.multiplyScalar(0.0);
                         break;
-                    case "turn_right":
-                        this.mesh.rotateY(-this.angularVelocity);
-                        this.currentRadiansOnY += this.angularVelocity;
+                    case "jump_forward":
+                        dir = new THREE.Vector3().subVectors(this.target.position, this.mesh.position);
+                        var upForce = new THREE.Vector3(0, 0.012 * (dir.length() / movementValue), 0);
+                        dir.setLength(this.topAccelleration);
+                        //apply forces
+                        this.applyForce(dir);
+                        this.applyForce(upForce);
+                        this.applyForce(this.gravityForce);
+                        // add accelleration
+                        this.velocity.add(this.accelleration);
+                        //limits
+                        this._limitVelocity(this.topSpeed);
+                        //position object
+                        this.mesh.position.add(this.velocity);
+                        this._limitGravity();
+                        // reset forces
+                        this.accelleration.multiplyScalar(0.0);
                         break;
-                    case "turn_left":
-                        this.mesh.rotateY(this.angularVelocity);
-                        this.currentRadiansOnY += this.angularVelocity;
+
+                    case "turn":
+                        if (movementValue === "turnLeft") {
+                            this.mesh.rotateY(this.angularVelocity);
+                            this.currentRadiansOnY += this.angularVelocity;
+                        } else {
+                            this.mesh.rotateY(-this.angularVelocity);
+                            this.currentRadiansOnY += this.angularVelocity;
+                        }
                         break;
                     default:
                         console.log("command not implemented");
@@ -44443,6 +44466,7 @@ var Actor = function () {
     }, {
         key: "_nextAnimation",
         value: function _nextAnimation() {
+            this.velocity.multiplyScalar(0);
             if (this.instructions.length > 0) {
                 this.currentInstruction = this.instructions.shift();
                 this._setNewTarget(this.currentInstruction);
@@ -44453,10 +44477,10 @@ var Actor = function () {
     }, {
         key: "_targetReached",
         value: function _targetReached(movement) {
-            if (movement === "move_forward") {
+            if (movement === "move_forward" || movement == "jump_forward") {
                 var distance = this.mesh.position.distanceTo(this.target.position);
                 return distance <= 0.01;
-            } else if (movement === "turn_right" || movement === "turn_left") {
+            } else if (movement === "turn") {
                 return this.currentRadiansOnY >= this.targetRadiansOnY;
             }
         }
@@ -44470,17 +44494,18 @@ var Actor = function () {
                 case "move_forward":
                     this.target.translateZ(val);
                     break;
-                case "turn_right":
-                    rad = val * (Math.PI / 180);
-                    this.targetRadiansOnY = rad;
-                    this.currentRadiansOnY = 0;
-                    this.target.rotateY(-rad);
+                case "jump_forward":
+                    this.target.translateZ(val);
                     break;
-                case "turn_left":
-                    rad = val * (Math.PI / 180);
+                case "turn":
+                    rad = 90 * (Math.PI / 180);
                     this.targetRadiansOnY = rad;
                     this.currentRadiansOnY = 0;
-                    this.target.rotateY(rad);
+                    if (val === "turnLeft") {
+                        this.target.rotateY(rad);
+                    } else {
+                        this.target.rotateY(-rad);
+                    }
                     break;
                 default:
                     console.log("action " + key + " not implemented");
@@ -44495,11 +44520,20 @@ var Actor = function () {
     }, {
         key: "reset",
         value: function reset() {
-            this.mesh.position.set(new THREE.Vector3());
-            this.target = new THREE.Object3D().copy(this.mesh, false);
+            var origin = new THREE.Vector3(0.0, 0.0, 0.0);
+            this.mesh.position.setX(origin.x);
+            this.mesh.position.setY(origin.y);
+            this.mesh.position.setZ(origin.z);
             this.mesh.rotation.set(0.0, 0.0, 0.0); // TODO. Not sure if this is the correct way to reset a rotation
+            this.mesh.rotateY(Math.PI);
+            this.accelleration = new THREE.Vector3();
+            this.velocity = new THREE.Vector3();
             this.targetRadiansOnY = 0;
             this.currentRadiansOnY = 0;
+
+            this.target = new THREE.Object3D().copy(this.mesh, false);
+
+            console.log(this.mesh.position);
         }
     }, {
         key: "update",
@@ -44521,6 +44555,12 @@ exports.default = Actor;
 },{"three":3}],5:[function(require,module,exports){
 'use strict';
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _three = require('three');
 
 var THREE = _interopRequireWildcard(_three);
@@ -44541,113 +44581,161 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-var debug = true;
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var OrbitControls = require('three-orbit-controls')(THREE);
-var instructions = [];
-var actor = void 0,
-    plane = void 0,
-    renderer = void 0,
-    scene = void 0,
-    camera = void 0,
-    canvas = void 0,
-    stats = void 0,
-    controls = void 0,
-    clock = void 0;
 
-function initGame() {
-    clock = new THREE.Clock();
-    var screenWidth = window.innerWidth / 2;
-    var screenHeight = window.innerHeight;
+var Game = function () {
+    function Game() {
+        _classCallCheck(this, Game);
 
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, screenWidth / screenHeight, 0.1, 1000);
-    canvas = document.getElementById('game-canvas');
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(screenWidth, screenHeight);
-    canvas.appendChild(renderer.domElement);
-    controls = new OrbitControls(camera, renderer.domElement);
+        this.debug = true;
+        this.screenWidth = window.innerWidth / 2;
+        this.screenHeight = window.innerHeight;
+        var OrbitControls = require('three-orbit-controls')(THREE);
+        this.instructions = [];
+        this.clock = new THREE.Clock();
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(75, this.screenWidth / this.screenHeight, 0.1, 1000);
+        this.canvas = document.getElementById('game-canvas');
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(this.screenWidth, this.screenHeight);
+        this.canvas.appendChild(this.renderer.domElement);
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.stats = new _stats2.default();
 
-    plane = new _plane2.default();
-    plane.rotateX(-Math.PI / 2);
-    actor = new _actor2.default();
-    scene.add(actor.getMesh());
-    scene.add(plane.getMesh());
-
-    camera.position.z = 5;
-    camera.position.y = 2;
-
-    // stats
-    stats = new _stats2.default();
-    stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
-    stats.domElement.style.left = screenWidth * 2 - 80;
-    if (debug) {
-        canvas.appendChild(stats.domElement);
+        this.actor = new _actor2.default();
+        this.clock = new THREE.Clock();
+        this.plane = new _plane2.default();
     }
-    var axes = new THREE.AxisHelper(2);
-    scene.add(axes);
 
-    animate();
+    _createClass(Game, [{
+        key: 'initGame',
+        value: function initGame() {
+            this.plane.rotateX(-Math.PI / 2);
+            this.scene.add(this.actor.getMesh());
+            this.scene.add(this.plane.getMesh());
+            this.camera.position.z = 5;
+            this.camera.position.y = 2;
 
-    window.Blockly.JavaScript['actor_move_forward'] = function (block) {
-        var dropdown_actor_move_forward_distance = block.getFieldValue('actor_move_forward_distance');
-        var code = "instructions.push({type:'move_forward',value:" + dropdown_actor_move_forward_distance + "});";
-        return code;
-    };
+            // stats
+            this.stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+            this.stats.domElement.style.left = this.screenWidth * 2 - 80;
+            if (this.debug) {
+                this.canvas.appendChild(this.stats.domElement);
+            }
+            var axes = new THREE.AxisHelper(2);
+            this.scene.add(axes);
 
-    window.Blockly.JavaScript['actor_turn_right'] = function (block) {
-        var angle_actor_turn_right_value = block.getFieldValue('actor_turn_right_value');
-        var code = "instructions.push({type:'turn_right',value:" + angle_actor_turn_right_value + "});";
-        return code;
-    };
+            this.animate();
+        }
+    }, {
+        key: 'update',
+        value: function update() {
+            var delta = this.clock.getDelta();
+            var time = this.clock.getElapsedTime();
+            this.actor.update(time);
+            this.controls.update();
+        }
+    }, {
+        key: 'animate',
+        value: function animate() {
+            this.stats.begin();
+            this.render();
+            this.update();
+            this.stats.end();
+            requestAnimationFrame(this.animate.bind(this));
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            this.renderer.render(this.scene, this.camera);
+        }
+    }]);
 
-    window.Blockly.JavaScript['actor_turn_left'] = function (block) {
-        var angle_actor_turn_left_value = block.getFieldValue('actor_turn_left_value');
-        var code = "instructions.push({type:'turn_left',value:" + angle_actor_turn_left_value + "});";
-        return code;
-    };
+    return Game;
+}();
 
-    window.Blockly.JavaScript['actor_jump'] = function (block) {
-        var code = "console.log('actor_jump');";
-        return code;
-    };
-}
+exports.default = Game;
 
-function animate() {
-    stats.begin();
-    var delta = clock.getDelta();
-    var time = clock.getElapsedTime();
-    actor.update(time);
-    render();
-    controls.update();
-    //console.log(actor.getMesh().position)
-    stats.end();
-    requestAnimationFrame(animate);
-}
+},{"./actor":4,"./plane":7,"stats.js":1,"three":3,"three-orbit-controls":2}],6:[function(require,module,exports){
+'use strict';
 
-function render() {
-    renderer.render(scene, camera);
-};
+var _three = require('three');
+
+var THREE = _interopRequireWildcard(_three);
+
+var _stats = require('stats.js');
+
+var _stats2 = _interopRequireDefault(_stats);
+
+var _actor = require('./actor');
+
+var _actor2 = _interopRequireDefault(_actor);
+
+var _plane = require('./plane');
+
+var _plane2 = _interopRequireDefault(_plane);
+
+var _game = require('./game');
+
+var _game2 = _interopRequireDefault(_game);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+var game = void 0;
 
 window.blockly_loaded = function (blockly) {
     // init the game only after window.Blockly definition
     window.Blockly = blockly;
-    initGame();
+    defineActions();
+    game = new _game2.default();
+    game.initGame();
 };
 
 window.reset_car = function () {
-    actor.reset();
+    game.actor.reset();
 };
 
 window.run_code = function () {
     //reset instructions if the player did not complete everything
     // probably you should reset the position too
-    instructions = [];
+    game.instructions = [];
     var code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
+    // try {
+    //     eval(code);
+    // }catch(e){
+    //         console.log(e);
+    // }
     eval(code);
-    actor.startConsume(instructions);
+    //instructions.push({type:'jump_forward',value:1});
+    //instructions.push({type:'jump_forward',value:1});
+    game.actor.startConsume(game.instructions);
 };
 
-},{"./actor":4,"./plane":6,"stats.js":1,"three":3,"three-orbit-controls":2}],6:[function(require,module,exports){
+function defineActions() {
+    window.Blockly.JavaScript['actor_move_forward'] = function (block) {
+        var dropdown_actor_move_forward_distance = block.getFieldValue('actor_move_forward_distance');
+        var code = "game.instructions.push({type:'move_forward',value:" + dropdown_actor_move_forward_distance + "});";
+        return code;
+    };
+
+    window.Blockly.JavaScript['actor_turn'] = function (block) {
+        var direction = block.getFieldValue('actor_turn_direction');
+        var code = "game.instructions.push({type:'turn',value:'" + direction + "'});";
+        return code;
+    };
+
+    window.Blockly.JavaScript['actor_jump_forward'] = function (block) {
+        var dropdown_actor_jump_forward_distance = block.getFieldValue('actor_jump_forward_distance');
+        var code = "game.instructions.push({type:'jump_forward',value:" + dropdown_actor_jump_forward_distance + "});";
+        return code;
+    };
+}
+
+},{"./actor":4,"./game":5,"./plane":7,"stats.js":1,"three":3}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -44690,6 +44778,6 @@ var Plane = function () {
 
 exports.default = Plane;
 
-},{"three":3}]},{},[5])
+},{"three":3}]},{},[6])
 
 //# sourceMappingURL=build.js.map
