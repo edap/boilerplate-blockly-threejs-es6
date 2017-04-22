@@ -19,18 +19,9 @@ window.reset_car = function() {
 };
 
 window.run_code = function() {
-    //reset instructions if the player did not complete everything
-    // probably you should reset the position too
     game.instructions=[];
     var code = window.Blockly.JavaScript.workspaceToCode(window.Blockly.mainWorkspace);
-    // try {
-    //     eval(code);
-    // }catch(e){
-    //         console.log(e);
-    // }
     eval(code);
-    //instructions.push({type:'jump_forward',value:1});
-    //instructions.push({type:'jump_forward',value:1});
     game.actor.startConsume(game.instructions);
 };
 
