@@ -22,7 +22,7 @@ table {
 
 .game-edit{
   width: 49%;
-  float:left;
+  float:right;
 }
 #game-canvas{
   width: 49%;
